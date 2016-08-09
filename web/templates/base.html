@@ -1,0 +1,122 @@
+{% load staticfiles %}
+{% load bootstrap3 %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+    <link href="{% static 'css/simple-sidebar.css' %}" rel="stylesheet">
+    <link href="{% static 'css/datatables.min.css' %}" rel="stylesheet" />
+    <title>{% block title %}{% endblock %}</title>
+    <script>
+        function confirmBox() {
+            //return bootbox.dialog("{% trans "Do you confirm ?" %}");
+            return confirm("{% trans "Do you confirm ?" %}");
+        }
+    </script>
+</head>
+<body>
+
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <ul class="sidebar-nav">
+            <li class="sidebar-brand"><a href="/web/">EZ AWS</a></li>
+            <li>
+                <select class="form-control cust_name">
+                {% for n in names %}
+                    <option {% if n == current %}selected{% endif %}>{{ n }}</option>
+                {% endfor %}
+                </select>
+            </li>
+            <li><a onclick="goto_console()">AWS Console</a></li>
+            <li><a onclick="show_instances()">Instances</a></li>
+            <li><a onclick="show_snapshots()">Snapshots</a></li>
+            <li><a onclick="check_snapshots()">Check Snapshots</a></li>
+        </ul>
+    </div>
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    {% bootstrap_messages %}
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+</div>
+<!-- /#wrapper -->
+
+    <script src="{% static 'jquery/jquery-2.1.4.min.js' %}"></script>
+    <script src="{% static 'js/bootbox.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/datatables.min.js' %}"></script>
+    <script>
+// AJAX for posting
+function create_post() {
+    console.log("create post is working!") // sanity check
+    $.ajax({
+        url : "/web/ajax/get_customers", // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            $('#post-text').val(''); // remove the value from the input
+            console.log(json); // log the returned json to the console
+            console.log("success"); // another sanity check
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
+};
+
+function get_cust_name() {
+     var cust_name  = $("select.cust_name").val();
+     //alert(cust_name);
+     return cust_name;
+}
+
+function goto_console() {
+    var cust_name = get_cust_name();
+    window.open('/web/goto_console/' + cust_name, '_blank');
+}
+
+function show_instances() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_instances/' + cust_name;
+}
+
+function show_snapshots() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_snapshots/' + cust_name;
+}
+
+function check_snapshots() {
+    var cust_name = get_cust_name();
+    window.location = '/web/check_snapshots/' + cust_name;
+}
+
+$(document).ready(function() {
+    $('.table').DataTable({
+        'pageLength': 100
+    });
+} );
+</script>
+    {% block more_js %}{% endblock %}
+</body>
+</html>

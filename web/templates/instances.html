@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Instances" %}{% endblock %}
+
+{% block content %}
+<h2>Instances List - {{ running_count }}/{{ ec2list|length }} running</h2>
+<table class="table">
+    <thead><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td></thead>
+    <tbody class="table-striped">
+    {% for inst in ec2list %}
+        <tr>
+            <td>{{ inst.name }}</td>
+            <td>
+                {% if inst.instance_state.Name == 'running' %}<span class="label label-success">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'stopped' %}<span class="label label-danger">&nbsp;</span>{% endif %}
+                &nbsp;&nbsp;{{ inst.instance_state.Name }}
+            </td>
+            <td>{{ inst.public_ip }}</td>
+            <td>{{ inst.private_ip }}</td>
+            <td>{{ inst.zone }}</td>
+            <td>{{ inst.instance_type }}</td>
+            <td>{{ inst.instance_id }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

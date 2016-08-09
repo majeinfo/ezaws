@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Snapshots" %}{% endblock %}
+
+{% block content %}
+<h2>Snapshots List</h2>{{ response }}
+<table class="table">
+    <thead><td>Snapshot Id</td><td>State</td><td>Start Time</td><td>Volume ID</td><td>Volume Size</td></thead>
+    <tbody class="table-striped">
+    {% for snap in snaplist %}
+        <tr>
+            <td>{{ snap.SnapshotId }}</td>
+            <td>{{ snap.State }}</td>
+            <td>{{ snap.StartTime }}</td>
+            <td>{{ snap.VolumeId }}</td>
+            <td>{{ snap.VolumeSize }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
