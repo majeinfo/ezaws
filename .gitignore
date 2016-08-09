@@ -1,0 +1,6 @@
+*.pyc
+npm-debug.log
+db.sqlite3
+.idea/
+__pycache__/
+
