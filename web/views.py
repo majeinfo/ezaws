@@ -49,7 +49,7 @@ def get_instances(request, cust_name):
                         'tags': inst.tags,
                         'name': name})
 
-        if inst.instance_type in pricing.ec2_pricing and inst.state == 'running':
+        if inst.instance_type in pricing.ec2_pricing and inst.state['Name'] == 'running':
             price += pricing.ec2_pricing[inst.instance_type]
 
     return render(request, 'instances.html', { 'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': running, 'price': int(price * 24 * 30) })
