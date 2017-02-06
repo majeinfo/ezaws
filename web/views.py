@@ -2,6 +2,7 @@ from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import Customer
+from . import pricing
 import json
 import boto3
 
@@ -28,6 +29,7 @@ def get_instances(request, cust_name):
     ec2list = []
     ec2 = session.resource('ec2')
     running = 0
+    price = 0
     for inst in ec2.instances.all():
         if inst.state['Name'] == 'running': running += 1
 
@@ -47,7 +49,10 @@ def get_instances(request, cust_name):
                         'tags': inst.tags,
                         'name': name})
 
-    return render(request, 'instances.html', { 'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': running })
+        if inst.instance_type in pricing.ec2_pricing:
+            price += pricing.ec2_pricing[inst.instance_type]
+
+    return render(request, 'instances.html', { 'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': running, 'price': int(price * 24 * 30) })
 
 
 def get_snapshots(request, cust_name):
