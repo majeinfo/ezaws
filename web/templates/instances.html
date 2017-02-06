@@ -13,6 +13,7 @@
             <td>
                 {% if inst.instance_state.Name == 'running' %}<span class="label label-success">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'stopped' %}<span class="label label-danger">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'terminated' %}<span class="label label-warning">&nbsp;</span>{% endif %}
                 &nbsp;&nbsp;{{ inst.instance_state.Name }}
             </td>
             <td>{{ inst.public_ip }}</td>
