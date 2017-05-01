@@ -35,10 +35,11 @@ def get_instances(request, cust_name):
 
         # Extract the 'name' from tags
         name = ''
-        for tag in inst.tags:
-            if tag['Key'] == 'Name':
-                name = tag['Value']
-                break
+        if inst.tags:
+            for tag in inst.tags:
+                if tag['Key'] == 'Name':
+                    name = tag['Value']
+                    break
 
         ec2list.append({'instance_id': inst.id,
                         'instance_type': inst.instance_type,
