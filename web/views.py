@@ -1,13 +1,14 @@
+# import json
+# import boto3
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from . import utils
 from .models import Customer
 from . import pricing
-import json
-import boto3
 
-access_id = 'abc'
-secret_id = 'xyz'
+# access_id = 'abc'
+# secret_id = 'xyz'
 
 
 def index(request):
@@ -24,7 +25,7 @@ def goto_console(request, cust_name):
 def get_instances(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
-    session = _get_session(customer)
+    session = utils.get_session(customer)
 
     ec2list = []
     ec2 = session.resource('ec2')
@@ -59,7 +60,7 @@ def get_instances(request, cust_name):
 def get_snapshots(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
-    client = _get_client(customer, 'ec2')
+    client = utils.get_client(customer, 'ec2')
     response = client.describe_snapshots(OwnerIds=[customer.owner_id])
     snapshot_list= response['Snapshots']
 
@@ -80,9 +81,9 @@ def get_snapshots(request, cust_name):
 def check_snapshots(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
-    session = _get_session(customer)
+    session = utils.get_session(customer)
     ec2 = session.resource('ec2')
-    client = _get_client(customer, 'ec2')
+    client = utils.get_client(customer, 'ec2')
     response = client.describe_snapshots(OwnerIds=[customer.owner_id])
     snapshot_list= response['Snapshots']
 
@@ -138,20 +139,3 @@ def _get_customer(cust_name):
     return customer
 
 
-def _get_session(customer):
-    session = boto3.session.Session(
-        region_name=customer.region,
-        aws_access_key_id=customer.access_key,
-        aws_secret_access_key=customer.secret_key)
-
-    return session
-
-
-def _get_client(customer, resource_name):
-    client = boto3.client(
-        resource_name,
-        region_name=customer.region,
-        aws_access_key_id=customer.access_key,
-        aws_secret_access_key=customer.secret_key)
-
-    return client

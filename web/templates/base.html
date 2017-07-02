@@ -16,6 +16,11 @@
             return confirm("{% trans "Do you confirm ?" %}");
         }
     </script>
+
+    <script src="{% static 'jquery/jquery-2.1.4.min.js' %}"></script>
+    <script src="{% static 'js/bootbox.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/datatables.min.js' %}"></script>
 </head>
 <body>
 
@@ -56,10 +61,6 @@
 </div>
 <!-- /#wrapper -->
 
-    <script src="{% static 'jquery/jquery-2.1.4.min.js' %}"></script>
-    <script src="{% static 'js/bootbox.min.js' %}"></script>
-    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-    <script src="{% static 'js/datatables.min.js' %}"></script>
     <script>
 // AJAX for posting
 function create_post() {

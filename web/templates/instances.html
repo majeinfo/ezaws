@@ -3,9 +3,35 @@
 {% block title %}{% trans "Instances" %}{% endblock %}
 
 {% block content %}
+<script>
+    function get_cpu_load(instance_id) {
+        $.ajax({
+        url : "/web/ajax/get_instance_metrics/{{ current }}/" + instance_id, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            //$('#post-text').val(''); // remove the value from the input
+            //console.log(json); // log the returned json to the console
+            //console.log("success"); // another sanity check
+            //alert(json.cpu);
+            var tag = "#cpu-" + instance_id;
+            $(tag).html(json.cpu);
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
 <h2>Instances List - {{ running_count }}/{{ ec2list|length }} running</h2>
 <table class="table">
-    <thead><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td></thead>
+    <thead><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td></thead>
     <tbody class="table-striped">
     {% for inst in ec2list %}
         <tr>
@@ -21,6 +47,7 @@
             <td>{{ inst.zone }}</td>
             <td>{{ inst.instance_type }}</td>
             <td>{{ inst.instance_id }}</td>
+            <td><script>get_cpu_load("{{ inst.instance_id }}")</script><span id="cpu-{{ inst.instance_id }}"></span></td>
         </tr>
     {% endfor %}
     </tbody>
