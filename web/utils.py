@@ -23,6 +23,7 @@ def get_session(customer):
 
 
 def get_cloudwatch(customer):
-    '''Create a boto cloudwatch object  to query Customer's Resources'''
+    '''Create a boto cloudwatch object to query Customer's Resources'''
     session = get_session(customer)
     return session.client('cloudwatch')
+
