@@ -25,10 +25,14 @@ def goto_console(request, cust_name):
 def get_instances(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
+    client = utils.get_client(customer, 'ec2')
     session = utils.get_session(customer)
 
     ec2list = []
     ec2 = session.resource('ec2')
+    ips = client.describe_addresses()
+    #print(ips)
+
     running = 0
     price = 0
     for inst in ec2.instances.all():
@@ -46,6 +50,7 @@ def get_instances(request, cust_name):
                         'instance_type': inst.instance_type,
                         'instance_state': inst.state,
                         'public_ip': inst.public_ip_address,
+                        'is_elastic': _is_elastic_ip(ips, inst.public_ip_address),
                         'private_ip': inst.private_ip_address,
                         'zone' : inst.placement['AvailabilityZone'],
                         'tags': inst.tags,
@@ -62,7 +67,7 @@ def get_snapshots(request, cust_name):
     customer = _get_customer(cust_name)
     client = utils.get_client(customer, 'ec2')
     response = client.describe_snapshots(OwnerIds=[customer.owner_id])
-    snapshot_list= response['Snapshots']
+    snapshot_list = response['Snapshots']
 
     snaplist = []
     for snap in snapshot_list:
@@ -137,5 +142,12 @@ def _get_customers():
 def _get_customer(cust_name):
     customer = Customer.objects.get(name=cust_name)
     return customer
+
+def _is_elastic_ip(ips, public_ip):
+    if not 'Addresses' in ips: return False
+    for ip in ips['Addresses']:
+        if 'PublicIp' in ip and ip['PublicIp'] == public_ip: return True
+    return False
+
 
 
