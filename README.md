@@ -15,4 +15,11 @@ to their AWS Console.
 
 The list of your ELB (Classic or Application) is also available with the attached Instances and Costs.
 
+The connection to the MySQL Server can be configured with the following environment variables :
+    DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+
+Default value for DB_HOST is "localhost". In that case, you should add a volume definition to mount /var/run/mysqld/mysqld.sock inside the Container.
+
+You can also define DEBUG environment variable to set the DEBUG mode to True (default is False).
+
 
