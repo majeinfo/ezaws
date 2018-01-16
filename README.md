@@ -13,4 +13,6 @@ and their currently estimated costs.
 You can also check if EC2 Instances are snapshotted and you can get a direct link
 to their AWS Console.
 
+The list of your ELB (Classic or Application) is also available with the attached Instances and Costs.
+
 
