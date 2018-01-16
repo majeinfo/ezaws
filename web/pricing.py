@@ -1,3 +1,6 @@
+# TODO: le pricing ici devrait servir à construire les JS/HTML ?
+# TODO: le pricing devrait dépendre de la région ?
+
 ec2_pricing = {
 	't1.micro'	: 0.02,
 	't2.nano'	: 0.0063,
@@ -27,5 +30,20 @@ ec2_pricing = {
 	'r3.xlarge'	: 0.371,
 	'r4.large'	: 0.148,
 	'r4.xlarge'	: 0.296
+}
+
+elb_pricing = {
+    'classic': {
+        'by_hour': 0.028,
+        'by_gio': 0.008,
+    },
+    'application': {
+        'by_hour': 0.0252,
+        'by_gio': 0.006,
+    },
+    'network': {
+        'by_hour': 0.0252,
+        'by_gio': 0.006,
+    }
 }
 

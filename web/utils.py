@@ -27,3 +27,5 @@ def get_cloudwatch(customer):
     session = get_session(customer)
     return session.client('cloudwatch')
 
+
+

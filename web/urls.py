@@ -8,5 +8,6 @@ urlpatterns = [
     url(r'^get_instances/(?P<cust_name>.*)', views.get_instances, name='get_instances'),
     url(r'^get_snapshots/(?P<cust_name>.*)', views.get_snapshots, name='get_snapshots'),
     url(r'^check_snapshots/(?P<cust_name>.*)', views.check_snapshots, name='check_snapshots'),
+    url(r'^get_elbs/(?P<cust_name>.*)', views.get_elbs, name='get_elbs'),
     url(r'^goto_console/(?P<cust_name>.*)', views.goto_console, name='goto_console'),
 ]

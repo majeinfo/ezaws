@@ -41,6 +41,7 @@
             <li><a onclick="show_instances()">Instances</a></li>
             <li><a onclick="show_snapshots()">Snapshots</a></li>
             <li><a onclick="check_snapshots()">Check Snapshots</a></li>
+            <li><a onclick="show_elbs()">ELB</a></li>
         </ul>
     </div>
 
@@ -110,6 +111,11 @@ function show_snapshots() {
 function check_snapshots() {
     var cust_name = get_cust_name();
     window.location = '/web/check_snapshots/' + cust_name;
+}
+
+function show_elbs() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_elbs/' + cust_name;
 }
 
 $(document).ready(function() {
