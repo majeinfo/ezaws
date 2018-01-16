@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '6unrc3bpywlk17-r5uwr+3vumt3h@94fi9pmjwnd_fey8kr+^+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ['DEBUG'] if 'DEBUG' in os.environ else True
 
 ALLOWED_HOSTS = []
 
@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'ezaws.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ezaws',
-        'USER': 'ezaws',
-        'PASSWORD': 'ezaws',
-        'HOST': 'localhost',
+        'NAME': os.environ['DB_NAME'] if 'DB_NAME' in os.environ else 'ezaws',
+        'USER': os.environ['DB_USER'] if 'DB_USER' in os.environ else 'ezaws',
+        'PASSWORD': os.environ['DB_PASSWORD'] if 'DB_PASSWORD' in os.environ else 'ezaws',
+        'HOST': os.environ['DB_HOST'] if 'DB_HOST' in os.environ else 'localhost',
     }
 }
 
