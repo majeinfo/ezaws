@@ -6,4 +6,4 @@ RUN pip install -r ${target_dir}/requirements.txt
 RUN cd ${target_dir} && git clone https://github.com/majeinfo/ezaws.git
 EXPOSE 8000
 WORKDIR ${target_dir}/ezaws
-ENTRYPOINT [ "/usr/bin/python", "manage.py", "runserver" ]
+CMD [ "/usr/local/bin/python", "manage.py", "runserver", "0.0.0.0:8000" ]
