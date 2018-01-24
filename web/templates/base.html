@@ -44,7 +44,12 @@
             <li><a onclick="show_snapshots()">Snapshots</a></li>
             <li><a onclick="check_snapshots()">Check Snapshots</a></li>
             <li><a onclick="show_elbs()">ELB</a></li>
-            <li>{% if user.is_authenticated %}<a href="{% url 'auth_logout' %}">Logout ({{ user }})</a>{% endif %}</li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
+            {% if user.is_superuser %}
+            <li><a href="{% url 'admin:index' %}">Administration</a></li>
+            {% endif %}
+            {% endif %}
         </ul>
     </div>
 
