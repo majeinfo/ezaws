@@ -30,6 +30,7 @@
     <div id="sidebar-wrapper">
         <ul class="sidebar-nav">
             <li class="sidebar-brand"><a href="/web/">EZ AWS</a></li>
+            {% if user.is_superuser %}
             <li>
                 <select class="form-control cust_name">
                 {% for n in names %}
@@ -37,11 +38,13 @@
                 {% endfor %}
                 </select>
             </li>
+            {% endif %}
             <li><a onclick="goto_console()">AWS Console</a></li>
             <li><a onclick="show_instances()">Instances</a></li>
             <li><a onclick="show_snapshots()">Snapshots</a></li>
             <li><a onclick="check_snapshots()">Check Snapshots</a></li>
             <li><a onclick="show_elbs()">ELB</a></li>
+            <li>{% if user.is_authenticated %}<a href="{% url 'auth_logout' %}">Logout ({{ user }})</a>{% endif %}</li>
         </ul>
     </div>
 
@@ -62,7 +65,7 @@
 </div>
 <!-- /#wrapper -->
 
-    <script>
+<script>
 // AJAX for posting
 function create_post() {
     console.log("create post is working!") // sanity check
@@ -87,10 +90,16 @@ function create_post() {
     });
 };
 
+
 function get_cust_name() {
-     var cust_name  = $("select.cust_name").val();
-     //alert(cust_name);
-     return cust_name;
+    {% if user.is_superuser %}
+    var cust_name  = $("select.cust_name").val();
+    {% else %}
+    var cust_name = "{{ request.session.customer }}";
+    {% endif %}
+
+    //alert(cust_name);
+    return cust_name;
 }
 
 function goto_console() {

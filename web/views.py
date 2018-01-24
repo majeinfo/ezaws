@@ -4,25 +4,30 @@ import collections
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from . import utils
 from .models import Customer
 from . import pricing
-
-# access_id = 'abc'
-# secret_id = 'xyz'
+from .decorators import user_is_owner
 
 
+@login_required
 def index(request):
     names = _get_customers()
     context = { 'names': names }
+    #print(request.session['customer'])
     return render(request, 'index.html', context)
 
 
+@login_required
+@user_is_owner
 def goto_console(request, cust_name):
     customer = _get_customer(cust_name)
     return redirect(customer.console_url)
 
 
+@login_required
+@user_is_owner
 def get_instances(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
@@ -57,6 +62,8 @@ def get_instances(request, cust_name):
     return render(request, 'instances.html', { 'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': running, 'price': int(price * 24 * 31) })
 
 
+@login_required
+@user_is_owner
 def get_snapshots(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
@@ -78,6 +85,8 @@ def get_snapshots(request, cust_name):
     return render(request, 'snapshots.html', { 'current': cust_name, 'names': names, 'snaplist': snaplist })
 
 
+@login_required
+@user_is_owner
 def check_snapshots(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
@@ -124,6 +133,8 @@ def check_snapshots(request, cust_name):
 
 
 # TODO: implémenter une alerte en fonction du RequestCount remonté par le CloudWatch : si nul, ELB à supprimer ?
+@login_required
+@user_is_owner
 def get_elbs(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
