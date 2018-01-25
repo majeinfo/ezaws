@@ -31,7 +31,7 @@ urlpatterns = [
 '''
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     path('web/', include('web.urls')),
     path('auth/', include('authmgmt.urls')),
     path('', login_required(web.views.index)),
