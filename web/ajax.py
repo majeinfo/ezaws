@@ -42,3 +42,38 @@ def get_instance_metrics(request, cust_name, instance_id):
         load = 'N/A'
 
     return HttpResponse(json.dumps({ 'cpu': load }), content_type='application/json')
+
+
+def get_elb_reqcount(request, cust_name, elb_type, elb_name):
+    customer = Customer.objects.get(name=cust_name)
+    cloudwatch = utils.get_cloudwatch(customer)
+
+    now = datetime.utcnow()
+    past = now - timedelta(days=2)
+
+    #print(elb_type, elb_name)
+    if elb_type != 'classic':
+        elb_name = elb_name[elb_name.index('/')+1:]
+
+    #print(elb_type, elb_name)
+    try:
+        results = cloudwatch.get_metric_statistics(
+            Namespace='AWS/ELB' if elb_type == 'classic' else 'AWS/ApplicationELB',
+            MetricName='RequestCount',
+            Dimensions=[{'Name': 'LoadBalancerName' if elb_type == 'classic' else 'LoadBalancer', 'Value': elb_name}],
+            StartTime=past,
+            EndTime=now - timedelta(days=1),
+            Period=86400,
+            Statistics=['Sum']
+        )
+        #print(results)
+        datapoints = results['Datapoints']
+        if datapoints and len(datapoints):
+            req_count = datapoints[0]['Sum']
+        else:
+            req_count = 'N/A'
+    except Exception as e:
+        req_count = 'Err'
+        #print(e)
+
+    return HttpResponse(json.dumps({ 'req_count': req_count }), content_type='application/json')

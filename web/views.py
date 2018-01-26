@@ -158,6 +158,7 @@ def get_elbs(request, cust_name):
 
         elblist.append({
             'name': elb['LoadBalancerName'],
+            'arn': elb['LoadBalancerName'],
             'type': 'classic',
             'DNSName': elb['DNSName'],
             'listeners': listeners,
@@ -175,6 +176,7 @@ def get_elbs(request, cust_name):
     for elb in elbs['LoadBalancers']:
         e = {
             'name': elb['LoadBalancerName'],
+            'arn': elb['LoadBalancerArn'],
             'type': elb['Type'],
             'DNSName': elb['DNSName'],
             'listeners': [],

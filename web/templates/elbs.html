@@ -4,6 +4,37 @@
 
 {% block content %}
 <script>
+    function get_reqcount(elb_type, elb_name, elb_arn) {
+        var tag = "#req-" + elb_name;
+
+        $.ajax({
+        url : "/web/ajax/get_elb_reqcount_metrics/{{ current }}/" + elb_type + "/" + elb_arn, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            $(tag).html(json.req_count);
+            if (json.req_count < 1000) {
+                if (json.req_count < 100) {
+                    $(tag).toggleClass("label-info label-danger");
+                }
+                else {
+                    $(tag).toggleClass("label-info label-warning");
+                }
+            }
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
+<script>
     var prices = {
         application: { by_hour: 0.0252 },
         network: { by_hour: 0.0252 },
@@ -17,11 +48,11 @@
 <div class="panel panel-default">
   <div class="panel-body">
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">ELB List <span class="xbadge"><b>{{ elblist|length }}</b></span> defined</button>
+    <button class="btn btn-primary btn-lg" type="button">ELB List : <span class="xbadge"><b>{{ elblist|length }}</b></span> defined</button>
     <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span> (without Data Transfer)</button>
 </h2>
 <table class="table">
-    <thead><td>Name</td><td>Type (Price per month)</td><td>DNS Name</td><td>Listeners</td><td>Instances</td><td>Count</td><td>Target Groups</td></thead>
+    <thead><td>Name</td><td>Type (Price per month)</td><td>DNS Name</td><td>Listeners</td><td>Instances</td><td>Count</td><td>#Request<br>(last 24h)</td><td>Target Groups</td></thead>
     <tbody class="table-striped">
     {% for elb in elblist %}
         <tr>
@@ -29,8 +60,12 @@
             <td>{{ elb.type }} <span class="badge"><script>document.writeln(get_elb_price("{{ elb.type }}"))</script></span></td>
             <td>{{ elb.DNSName }}</td>
             <td>{% for lis in elb.listeners %}{{ lis }}{% if not forloop.last %},{% endif %}{% endfor %}</td>
-            <td>{% if elb.instances|length == 0 %}<span class="label label-danger">&nbsp;</span>{% endif %}{% for inst in elb.instances %}<span class="label label-info">{{ inst }}{% if not forloop.last %}</span>&nbsp;{% endif %}{% endfor %}</td>
+            <td>{% if elb.instances|length == 0 %}<span class="label label-danger">&nbsp;</span>{% endif %}{% for inst in elb.instances %}<span class="label label-primary">{{ inst }}{% if not forloop.last %}</span>&nbsp;{% endif %}{% endfor %}</td>
             <td>{% if elb.instances|length == 0 %}<span class="label label-danger">&nbsp{% else %}<span class="label label-success">&nbsp{% endif %}{{ elb.instances|length }}</span></td>
+            <td>
+                <span id="req-{{ elb.name }}" class="label label-info"></span>
+                <script>get_reqcount("{{ elb.type }}", "{{ elb.name }}", "{{ elb.arn }}")</script>
+            </td>
             <td>{% for tgt in elb.target_groups %}{{ tgt }}{% if not forloop.last %},{% endif %}{% endfor %}</td>
         </tr>
     {% endfor %}
