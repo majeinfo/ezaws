@@ -9,6 +9,7 @@
 
         if (instance_state != "running") {
             $(tag).html("N/A");
+            $(tag).toggleClass("label-info label-default");
             return;
         }
 
@@ -20,6 +21,14 @@
         // handle a successful response
         success : function(json) {
             $(tag).html(json.cpu);
+            if (json.cpu > 0.7) {
+                if (json.cpu > 0.9) {
+                    $(tag).toggleClass("label-info label-danger");
+                }
+                else {
+                    $(tag).toggleClass("label-info label-warning");
+                }
+            }
         },
 
         // handle a non-successful response
@@ -102,8 +111,8 @@
     <button class="btn btn-primary btn-lg" type="button">Instances List <span class="xbadge"><b>{{ running_count }}/{{ ec2list|length }}</b></span> running</button>
     <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span></button>
 </h2>
-<table class="table">
-    <thead><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td></thead>
+<table class="table table-hover">
+    <thead><tr><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td></tr></thead>
     <tbody class="table-striped">
     {% for inst in ec2list %}
         <tr>
@@ -118,9 +127,9 @@
             <td>{{ inst.private_ip }}</td>
             <td>{{ inst.zone }}</td>
             <td>{{ inst.instance_type }} <span class="badge"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
-            <td>{{ inst.instance_id }}</td>
+            <td><span class="label label-primary">{{ inst.instance_id }}</span></td>
             <td>
-                <span id="cpu-{{ inst.instance_id }}"></span>
+                <span id="cpu-{{ inst.instance_id }}" class="label label-info"></span>
                 <script>get_cpu_load("{{ inst.instance_id }}", "{{ inst.instance_state.Name }}")</script>
             </td>
         </tr>
