@@ -1,6 +1,7 @@
 import os
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from .forms import LoginForm
 from web.models import User, Customer
@@ -40,6 +41,7 @@ def logoutAction(request):
     return HttpResponseRedirect('/web')
 
 
+@csrf_exempt
 def hookDeployAction(request):
     # Should be in another Controller - normally called by DockerHub as a hook
     #os.system('sudo -u ezaws /home/ezaws/restart.sh')
