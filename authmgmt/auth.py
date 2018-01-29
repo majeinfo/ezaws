@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
@@ -37,4 +38,10 @@ def loginAction(request):
 def logoutAction(request):
     logout(request)
     return HttpResponseRedirect('/web')
+
+
+def hookDeployAction(request):
+    # Should be in another Controller - normally called by DockerHub as a hook
+    os.system('sudo -u ezaws /home/ezaws/restart.sh')
+
 
