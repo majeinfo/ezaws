@@ -25,6 +25,9 @@ SECRET_KEY = '6unrc3bpywlk17-r5uwr+3vumt3h@94fi9pmjwnd_fey8kr+^+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ['DEBUG'] if 'DEBUG' in os.environ else True
 
+# Current Version
+VERSION = os.environ['VERSION'] if 'VERSION' in os.environ else 'dev'
+
 ALLOWED_HOSTS = []
 
 
@@ -63,6 +66,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'ezaws.context_processors.global_settings',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
