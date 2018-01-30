@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2>Instances List</h2>
-<table class="table">
+<table class="table table-hover">
     <thead><td>Name</td><td>Status</td><td>Instance ID</td><td>Volume Count</td><td>Volumes Snapped</td><td>Start Time</td></thead>
     <tbody class="table-striped">
     {% for inst in ec2list %}

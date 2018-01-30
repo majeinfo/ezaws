@@ -132,7 +132,6 @@ def check_snapshots(request, cust_name):
     return render(request, 'check_snapshots.html', { 'current': cust_name, 'names': names, 'ec2list': ec2list })
 
 
-# TODO: implémenter une alerte en fonction du RequestCount remonté par le CloudWatch : si nul, ELB à supprimer ?
 @login_required
 @user_is_owner
 def get_elbs(request, cust_name):
@@ -210,6 +209,32 @@ def get_elbs(request, cust_name):
         price += pricing.elb_pricing['application']['by_hour']
 
     return render(request, 'elbs.html', {'current': cust_name, 'names': names, 'elblist': elblist, 'price': int(price * 24 * 31)})
+
+
+@login_required
+@user_is_owner
+def get_elasticache(request, cust_name):
+    names = _get_customers()
+    customer = _get_customer(cust_name)
+    client = utils.get_elasticache(customer)
+    caches = client.describe_cache_clusters()
+
+    cachelist = []
+    price = 0
+
+    for cache in caches['CacheClusters']:
+        cachelist.append({
+            'name': cache['CacheClusterId'],
+            'type': cache['CacheNodeType'][len('cache.'):], # strip "cache." from "cache.t2.micro"
+            'engine': cache['Engine'],
+            'engineVersion': cache['EngineVersion'],
+            'numnodes': cache['NumCacheNodes'],
+            'availzone': cache['PreferredAvailabilityZone'],
+        })
+
+        price += pricing.cache_pricing[cache['CacheNodeType'][len('cache.'):]]
+
+    return render(request, 'elasticache.html', {'current': cust_name, 'names': names, 'cachelist': cachelist, 'price': int(price * 24 * 31) })
 
 
 def _get_customers():

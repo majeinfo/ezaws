@@ -28,4 +28,7 @@ def get_cloudwatch(customer):
     return session.client('cloudwatch')
 
 
-
+def get_elasticache(customer):
+    '''Create a boto elasticache object to query Customer's Resources'''
+    session = get_session(customer)
+    return session.client('elasticache')

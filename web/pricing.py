@@ -47,3 +47,30 @@ elb_pricing = {
     }
 }
 
+cache_pricing = {
+    'm1.small': 0.036,      # wrong
+	't2.micro'	: 0.018,
+	't2.small'	: 0.036,
+	't2.medium'	: 0.073,
+	'm4.large'	: 0.172,
+	'm4.xlarge'	: 0.343,
+	'm4.2xlarge'	: 0.686,
+	'm4.4xlarge'	: 1.373,
+	'm4.10xlarge'	: 3.433,
+	'm3.medium'	: 0.095,
+	'm3.large'	: 0.200,
+	'm3.xlarge'	: 0.400,
+	'm3.2xlarge'	: 0.785,
+	'r3.large'	: 0.254,
+	'r3.xlarge'	: 0.507,
+	'r3.2xlarge'	: 1.014,
+	'r3.4xlarge'	: 2.028,
+	'r3.8xlarge'	: 4.056,
+	'r4.large'	: 0.254,
+	'r4.xlarge'	: 0.507,
+    'r4.2xlarge': 1.014,
+    'r4.4xlarge': 2.028,
+    'r48xlarge': 4.056,
+    'r4.16xlarge': 8.112,
+}
+

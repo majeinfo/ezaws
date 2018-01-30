@@ -44,6 +44,7 @@
             <li><a onclick="show_snapshots()">Snapshots</a></li>
             <li><a onclick="check_snapshots()">Check Snapshots</a></li>
             <li><a onclick="show_elbs()">ELB</a></li>
+            <li><a onclick="show_elasticache()">ElastiCache</a></li>
             {% if user.is_authenticated %}
             <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
             {% if user.is_superuser %}
@@ -130,6 +131,11 @@ function check_snapshots() {
 function show_elbs() {
     var cust_name = get_cust_name();
     window.location = '/web/get_elbs/' + cust_name;
+}
+
+function show_elasticache() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_elasticache/' + cust_name;
 }
 
 $(document).ready(function() {

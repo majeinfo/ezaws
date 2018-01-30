@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "EastiCache Instances" %}{% endblock %}
+
+{% block content %}
+<script>
+    var prices = [
+            {
+                category: "General Purpose",
+                prices: {
+                    m1_small: 14,
+                    t2_micro: 14, t2_small: 28, t2_medium: 56,
+                    m4_large: 128,  m4_xlarge: 256, m4_2xlarge: 512, m4_4xlarge: 1024, m4_10xlarge: 2048,
+                    m3_medium: 71, m3_large: 149, m3_xlarge: 298, m3_2xlarge: 596
+                }
+            },
+            {
+                category: "Memory Optimized",
+                prices: {
+                    r3_large: 189, r3_xlarge: 378, r3_2xlarge: 756, r3_4xlarge: 1512, r3_8xlarge: 3024,
+                    r4_large: 189, r4_xlarge: 378, r4_2xlarge: 756, r4_4xlarge: 1512, r4_8xlarge: 3024, r4_16xlarge: 6048
+                }
+            },
+    ];
+
+    function get_inst_price(model) {
+        model = model.replace('.', '_');
+
+        for (var i = 0; i < prices.length; i++) {
+            if (model in prices[i].prices) {
+                return prices[i].prices[model]
+            }
+        }
+
+        return "???";
+    }
+</script>
+<script>
+    function set_alarm(tag, warning, critical) {
+        if (critical) {
+            $(tag).toggleClass("label-info label-danger");
+        }
+        else {
+            if (warning) {
+                $(tag).toggleClass("label-info label-warning");
+            }
+        }
+    }
+
+    function get_cache_metrics(cache_type, cache_name) {
+        $.ajax({
+        url : "/web/ajax/get_cache_metrics/{{ current }}/" + cache_type + "/" + cache_name, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            var tag = "#metric-cpu-max-" + cache_name;
+            $(tag).html(json.cpu_max);
+            // This is a memcached rule. For Redis, it depends on the count of cores (cpu_count < 100/#cores)
+            set_alarm(tag, json.cpu_max > 70, json.cpu_max > 90);
+
+            tag = "#metric-cpu-avg-" + cache_name;
+            $(tag).html(json.cpu_avg);
+            set_alarm(tag, json.cpu_max > 70, json.cpu_max > 90);
+
+            tag = "#metric-total-gets-" + cache_name;
+            $(tag).html(json.total_gets);
+            set_alarm(tag, json.total_gets < 100, json.total_gets < 10 || json.total_gets == 'N/A');
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            var tag = "#metric-cpu-max-" + cache_name;
+            $(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
+<div class="panel panel-default">
+  <div class="panel-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">ElastiCache List : <span class="xbadge"><b>{{ cachelist|length }}</b></span> defined</button>
+    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span> (without Data Transfer)</button>
+</h2>
+<table class="table table-hover">
+    <thead><td>Name</td><td>Type (Price per month)</td><td>Engine</td><td>#Nodes</td><td>Availability Zone</td><td>Max/Avg.CPU (%)<br>(last 24h)</td><td>Total Gets<br>(last 24h)</td></thead>
+    <tbody class="table-striped">
+    {% for cache in cachelist %}
+        <tr>
+            <td>{{ cache.name }}</td>
+            <td>{{ cache.type }} <span class="badge"><script>document.writeln(get_inst_price("{{ cache.type }}"))</script></span></td>
+            <td>{{ cache.engine }} {{ cache.engineVersion }}</td>
+            <td><span class="label label-success">{{ cache.numnodes }}</span></td>
+            <td>{{ cache.availzone }}</td>
+            <td>
+                <span id="metric-cpu-max-{{ cache.name }}" class="label label-info"></span>
+                <span id="metric-cpu-avg-{{ cache.name }}" class="label label-info"></span>
+                <script>get_cache_metrics("{{ cache.engine }}", "{{ cache.name }}")</script>
+            </td>
+            <td>
+                <span id="metric-total-gets-{{ cache.name }}" class="label label-info"></span>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+  </div>
+</div>
+<div class="panel panel-default">
+  <div class="panel-body">
+      <h3>Pricing List (in $ per month)</h3>
+      <script>
+          /* Display Prices */
+          for (var i = 0; i < prices.length; i++) {
+            var cat = prices[i].category;
+            var pri = prices[i].prices;
+            document.writeln("<h4>" + cat + "</h4>");
+            var curtype = '';
+            for (var k in pri) {
+                if (curtype != k.substr(0,2)) {
+                    if (curtype != '') document.writeln("<br>");
+                    curtype = k.substr(0,2);
+                }
+                document.writeln('<button class="btn btn-default" type="button">' + k + ' <span class="badge">' + pri[k].toString() + '</span></button>');
+            }
+          }
+      </script>
+  </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@
 
 {% block content %}
 <h2>Snapshots List</h2>{{ response }}
-<table class="table">
+<table class="table table-hover">
     <thead><td>Snapshot Id</td><td>State</td><td>Start Time</td><td>Volume ID</td><td>Volume Size</td></thead>
     <tbody class="table-striped">
     {% for snap in snaplist %}
