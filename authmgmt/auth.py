@@ -1,4 +1,5 @@
 import os
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -44,8 +45,11 @@ def logoutAction(request):
 @csrf_exempt
 def hookDeployAction(request):
     # Should be in another Controller - normally called by DockerHub as a hook
+    json_data = json.loads(request.body)
+    tag = json_data['push_data']['tag']
+
     #os.system('sudo -u ezaws /home/ezaws/restart.sh')
-    os.system('/home/ezaws/restart.sh')
+    os.system('/home/ezaws/restart.sh ' + tag)
     return HttpResponse("OK")
 
 
