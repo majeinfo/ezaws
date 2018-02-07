@@ -51,13 +51,14 @@
             <li><a style="color:#999999;" onclick="show_elbs()">ELB</a></li>
             <li><a style="color:#999999;" onclick="show_elasticache()">ElastiCache</a></li>
             <li><a style="color:#999999;" onclick="start_audit()">Run Audit</a></li>
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and not user.is_superuser %}
             <li><a href="{% url 'auth_profile' %}">Your Settings</a></li>
             <li><a href="{% url 'check_key' request.session.customer %}">Check AWS Keys</a></li>
             <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
+            {% endif %}
             {% if user.is_superuser %}
             <li><a href="{% url 'admin:index' %}">Administration</a></li>
-            {% endif %}
+            <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
             {% endif %}
         </ul>
     </div>
