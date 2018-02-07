@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "ELB Instances" %}{% endblock %}
+
+{% block content %}
+<script>
+    function get_reqcount(elb_type, elb_name, elb_arn) {
+        var tag = "#req-" + elb_name;
+
+        $.ajax({
+        url : "/web/ajax/get_elb_reqcount_metrics/{{ current }}/" + elb_type + "/" + elb_arn, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            $(tag).html(json.req_count);
+            if (json.req_count == 'N/A') {
+                $(tag).toggleClass("badge badge-secondary");
+            }
+            else {
+                if (json.req_count < 1000) {
+                   if (json.req_count < 100) {
+                        $(tag).toggleClass("badge badge-danger");
+                    }
+                    else {
+                        $(tag).toggleClass("badge badge-warning");
+                    }
+                }
+                else {
+                   $(tag).toggleClass("badge badge-info");
+                }
+            }
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $(tag).html("Err");
+            //$(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+            //    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            //console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
+<script>
+    var prices = {
+        application: { by_hour: 0.0252 },
+        network: { by_hour: 0.0252 },
+        classic: { by_hour: 0.028 },
+    };
+
+    function get_elb_price(type) {
+        return Math.floor(prices[type].by_hour * 24 * 31);
+    }
+</script>
+<div class="card card-default">
+  <div class="card-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">ELB List : <span class="xbadge"><b>{{ elblist|length }}</b></span> defined</button>
+    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span> (without Data Transfer nor LCU)</button>
+</h2>
+<table class="table table-hover">
+    <thead><td>Name</td><td>Type (Price per month)</td><td>DNS Name</td><td>Listeners</td><td>Instances</td><td>Count</td><td>#Request<br>(last 24h)</td><td>Target Groups</td><td>Domains</td></thead>
+    <tbody class="table-striped">
+    {% for elb in elblist %}
+        <tr>
+            <td>{{ elb.name }}</td>
+            <td>{{ elb.type }} <span class="badge badge-secondary"><script>document.writeln(get_elb_price("{{ elb.type }}"))</script></span></td>
+            <td>{{ elb.DNSName }}</td>
+            <td>{% for lis in elb.listeners %}{{ lis }}{% if not forloop.last %},{% endif %}{% endfor %}</td>
+            <td>{% if elb.instances|length == 0 %}<span class="badge badge-danger">&nbsp;</span>{% endif %}{% for inst in elb.instances %}<span class="badge badge-primary">{{ inst }}{% if not forloop.last %}</span>&nbsp;{% endif %}{% endfor %}</td>
+            <td>{% if elb.instances|length == 0 %}<span class="badge badge-danger">&nbsp{% else %}<span class="badge badge-success">&nbsp{% endif %}{{ elb.instances|length }}</span></td>
+            <td>
+                <span id="req-{{ elb.name }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                <script>get_reqcount("{{ elb.type }}", "{{ elb.name }}", "{{ elb.arn }}")</script>
+            </td>
+            <td>{% for tgt in elb.target_groups %}{{ tgt }}{% if not forloop.last %},{% endif %}{% empty %}-{% endfor %}</td>
+            <td>
+                {% for zone in elb.zones %}
+                    {{ zone }}&nbsp;
+                {% empty %}
+                <span class="badge badge-danger">empty ?</span>
+                {% endfor %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+  </div>
+</div>
+{% endblock %}

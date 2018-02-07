@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Audit AWS Resources" %}{% endblock %}
+{% block content %}
+<div class="card card-default">
+  <div class="card-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">Orphan/Unused Resources</button>
+</h2>
+
+<table class="table table-hover">
+    <thead><tr><td>Resource Type</td><td>Total Count</td><td>Orphan/Unused<br>Count</td><td>Orphan/Unused List</td><td>Total Size</td><td>Total Price</td></tr></thead>
+    <tbody class="table-striped">
+
+    <!-- Orphan Volumes -->
+    <tr>
+        <td><span class="btn btn-info">Volumes</span></td>
+        <td><span class="badge badge-success">{{ total_vols }}</span></td>
+        <td>{% if orphan_vols|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ orphan_vols|length }}</span></td>
+        <td>
+            {% for volid in orphan_vols %}
+                <span class="badge badge-primary">{{ volid }}</span>&nbsp;
+                    {% for key, value in vol_sizes.items %}
+                        {% if key == volid %}<span class="badge badge-info">{{ value }} GiB</span>{% endif %}
+                    {% endfor %}&nbsp;
+            {% endfor %}
+        </td>
+        <td>{% if total_vols_size %}
+            <span class="badge badge-info">{{ total_vols_size }} GiB</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if total_vols_price %}
+                <span class="badge badge-warning">{{ total_vols_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ total_vols_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    <!-- Orphan AMIs -->
+    <tr>
+        <td><span class="btn btn-info">AMIs</span></td>
+        <td><span class="badge badge-success">{{ total_amis }}</span></td>
+        <td>{% if orphan_amis|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ orphan_amis|length }}</span></td>
+        <td>
+            {% for amid in orphan_amis %}
+                <span class="badge badge-primary">{{ amid }}</span>&nbsp;
+                    {% for key, value in ami_sizes.items %}
+                        {% if key == amid %}<span class="badge badge-info">{{ value }} GiB</span>{% endif %}
+                    {% endfor %}&nbsp;
+            {% endfor %}
+        </td>
+        <td>{% if total_amis_size %}
+            <span class="badge badge-info">{{ total_amis_size }} GiB</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if total_amis_price %}
+                <span class="badge badge-warning">{{ total_amis_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ total_amis_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    <!-- Orphan EIPs -->
+    <tr>
+        <td><span class="btn btn-info">Elastic IPs</span></td>
+        <td><span class="badge badge-success">{{ total_eips }}</span></td>
+        <td>{% if orphan_eips|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ orphan_eips|length }}</span></td>
+        <td>
+            {% for ip in orphan_eips %}
+                <span class="badge badge-primary">{{ ip }}</span>&nbsp;
+            {% endfor %}
+        </td>
+        <td>
+        </td>
+        <td>
+            {% if total_eips_price %}
+                <span class="badge badge-warning">{{ total_eips_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ total_eips_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    <!-- Stopped Instances -->
+    <tr>
+        <td><span class="btn btn-info">Stopped Instances</span></td>
+        <td><span class="badge badge-success">{{ total_instances }}</span></td>
+        <td>{% if stopped_instances|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ stopped_instances|length }}</span></td>
+        <td>
+            {% for key, value in stopped_instances.items %}
+                <span class="badge badge-primary">{{ key }}</span>&nbsp;<span class="badge badge-info">{{ value }} GiB</span>
+            {% endfor %}
+        </td>
+        <td>{% if total_instances_size %}
+            <span class="badge badge-info">{{ total_instances_size }} GiB</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if total_instances_price %}
+                <span class="badge badge-warning">{{ total_instances_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ total_instances_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    <!-- Orphaned Target Groups -->
+    <tr>
+        <td><span class="btn btn-info">Unused Target Groups</span></td>
+        <td><span class="badge badge-success">{{ total_target_groups }}</span></td>
+        <td>{% if orphan_target_groups|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ orphan_target_groups|length }}</span></td>
+        <td>
+            {% for name in orphan_target_groups %}
+                <span class="badge badge-primary">{{ name }}</span>&nbsp;
+            {% endfor %}
+        </td>
+        <td></td>
+        <td><span class="badge badge-secondary">0</span></td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">Underused Resources</button>
+</h2>
+
+<table class="table table-hover">
+    <thead><tr><td>Resource Type</td><td>Total Count</td><td>Underused<br>Count</td><td>Underused List</td><td>Total Size</td><td>Total Price</td></tr></thead>
+    <tbody class="table-striped">
+
+    <!-- Underused Volumes -->
+    <tr>
+        <td><span class="btn btn-info">Underused Volumes</span></td>
+        <td><span class="badge badge-success">{{ total_vols }}</span></td>
+        <td>{% if underused_volumes|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ underused_volumes|length }}</span></td>
+        <td>
+            {% for vol in underused_volumes %}
+                <span class="badge badge-primary">{{ vol }}</span>&nbsp;
+            {% endfor %}
+        </td>
+        <td><span class="badge badge-info">{{ underused_size }} GiB</span></td>
+        <td>
+            {% if underused_price %}
+                <span class="badge badge-warning">{{ underused_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ underused_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    </tbody>
+</table>
+
+  </div>
+</div>
+{% endblock %}

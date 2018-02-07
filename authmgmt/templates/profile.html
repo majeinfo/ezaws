@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}{% trans "Account Settings Page" %}{% endblock %}
+{% block content %}
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    {{ form.non_field_errors }}
+                    <div class="card">
+                        <div class="card-header">
+                            <legend>Account Settings :</legend>
+                        </div>
+                        <div class="card-body">
+                            <form action="{% url 'auth_profile' %}" method="post" class="form-horizontal">
+                                {% csrf_token %}
+                                <div class="form-group row">
+                                    <label for="console_url" class="col-sm-4 control-label">{{ form.console_url.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {% if form.console_url.errors %}
+                                        <input type="text" class="form-control is-invalid" name="console_url" placeholder="https://xxxxxxx.signin.aws.amazon.com/console" value="{{ form.console_url.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="console_url" placeholder="https://xxxxxxx.signin.aws.amazon.com/console" value="{{ form.console_url.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.console_url.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="access_key" class="col-sm-4 control-label">{{ form.access_key.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {% if form.access_key.errors %}
+                                        <input type="text" class="form-control is-invalid" name="access_key" placeholder="AKIAxxxxxxxxxxxxxxxx" value="{{ form.access_key.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="access_key" placeholder="AKIAxxxxxxxxxxxxxxxx" value="{{ form.access_key.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.access_key.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="secret_key" class="col-sm-4 control-label">{{ form.secret_key.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {% if form.access_key.errors %}
+                                        <input type="text" class="form-control is-invalid" name="secret_key" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="{{ form.secret_key.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="secret_key" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="{{ form.secret_key.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.secret_key.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="owner_id" class="col-sm-4 control-label">{{ form.owner_id.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {% if form.owner_id.errors %}
+                                        <input type="text" class="form-control is-invalid" name="owner_id" placeholder="123456789012" value="{{ form.owner_id.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="owner_id" placeholder="123456789012" value="{{ form.owner_id.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.owner_id.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="region" class="col-sm-4 control-label">{{ form.region.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {{ form.region }}
+                                        <div class="invalid-feedback">{{ form.region.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="timezone" class="col-sm-4 control-label">{{ form.timezone.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {{ form.timezone }}
+                                        <div class="invalid-feedback">{{ form.timezone.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-4 col-form-label"></label>
+                                    <div class="col-sm-offset-2 col-sm-3">
+                                        <button type="submit" class="btn btn-primary" name="submit" placeholder="Save">Save</button>&nbsp;
+                                        <button type="submit" class="btn btn-outline-primary" name="cancel" placeholder="Cancel">Cancel</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="next" value="{{ next }}" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+{% endblock %}
+

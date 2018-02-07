@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}{% trans "AWS Keys checking" %}{% endblock %}
+{% block content %}
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8">
+
+<script>
+    function check_perm(perm) {
+        var tag = "#" + perm + " > i";
+
+        $.ajax({
+        url : "/web/ajax/check_permission/{{ current }}/" + perm, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            //$(tag).html(json.value);
+            if (json.value == true) {
+                $(tag).removeClass("fa-spinner fa-pulse").addClass("fa-check");
+                $(tag).css("color", "green");
+            } else {
+                $(tag).removeClass("fa-spinner fa-pulse").addClass("fa-times");
+                $(tag).css("color", "red");
+            }
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+
+     function check_all_perms() {
+        $(".xyz > i").removeClass("fa-question fa-check fa-times").addClass("fa-spinner fa-pulse");
+        $(".xyz > i").css("color", "black");
+        {% for perm in perms %}
+        check_perm("{{ perm.perm }}");
+        {% endfor %}
+     }
+</script>
+
+<div class="card">
+  <div class="card-header">
+    Check your Access and Secret Keys :
+      the provided Keys need some read permissions to access and audit your AWS account.<br>
+      Click the button below to check if the required permissions are satisfied.<br><br>
+      <center>
+        <button type="submit" class="btn btn-primary" onclick="check_all_perms();">Check now !</button>
+      </center>
+  </div>
+  <div class="card-body">
+    <table class="table table-hover">
+        <thead><tr><td>Purpose</td><td>Permission Name</td><td>Is set ?</td></tr></thead>
+        <tbody class="table-striped">
+        {% for perm in perms %}
+        <tr>
+            <td>{{ perm.desc }}</td>
+            <td><code>{{ perm.iam_perm }}</code></td>
+            <td>
+                <span class="xyz" id="{{ perm.perm }}"><i class="fas fa-question"></i></span>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+  </div>
+</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+{% endblock %}

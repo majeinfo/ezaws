@@ -1,0 +1,86 @@
+{% extends "auth_base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}{% trans "Profile Edition" %}{% endblock %}
+{% block content %}
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    {{ form.non_field_errors }}
+                    <div class="card">
+                        <div class="card-header">
+                            <legend>Sign-up for your new account :</legend>
+                        </div>
+                        <div class="card-body">
+                            <form action="{% url 'auth_signup' %}" method="post" class="form-horizontal">
+                                {% csrf_token %}
+                                <div class="form-group row">
+                                    <label for="username" class="col-sm-5 control-label">{{ form.username.label_tag }}</label>
+                                    <div class="col-sm-6">
+                                        {% if form.username.errors %}
+                                        <input type="text" class="form-control is-invalid" name="username" placeholder="login" value="{{ form.username.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="username" placeholder="login" value="{{ form.username.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.username.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="password" class="col-sm-5 control-label">{{ form.password.label_tag }}</label>
+                                    <div class="col-sm-6">
+                                        {% if form.username.errors %}
+                                        <input type="password" class="form-control is-invalid" name="password" placeholder="password" value="{{ form.password.value }}">
+                                        {% else %}
+                                        <input type="password" class="form-control" name="password" placeholder="password" value="{{ form.password.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.password.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="password2" class="col-sm-5 control-label">{{ form.password2.label_tag }}</label>
+                                    <div class="col-sm-6">
+                                        {% if form.username.errors %}
+                                        <input type="password" class="form-control is-invalid" name="password2" placeholder="password" value="{{ form.password2.value }}">
+                                        {% else %}
+                                        <input type="password" class="form-control" name="password2" placeholder="password" value="{{ form.password2.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.password2.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="email" class="col-sm-5 control-label">{{ form.email.label_tag }}</label>
+                                    <div class="col-sm-6">
+                                        {% if form.username.errors %}
+                                        <input type="text" class="form-control is-invalid" name="email" placeholder="me@company.com" value="{{ form.email.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="email" placeholder="me@company.com" value="{{ form.email.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.email.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="captcha" class="col-sm-5 control-label">{{ form.captcha.label_tag }}</label>
+                                    <div class="col-sm-6">
+                                        {{ form.captcha }}
+                                        <div class="invalid-feedback">{{ form.captcha.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-5 col-form-label"></label>
+                                    <div class="col-sm-6">
+                                        <button type="submit" class="btn btn-primary" name="submit" placeholder="Submit">Subscribe</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="next" value="{{ next }}" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+{% endblock %}
+

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Volumes" %}{% endblock %}
+
+{% block content %}
+<script>
+    function get_vol_ops(volume_id) {
+        $.ajax({
+        url : "/web/ajax/get_vol_ops_metrics/{{ current }}/" + volume_id, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            var rtag = "#vol-read-" + volume_id;
+            var wtag = "#vol-write-" + volume_id;
+            var rtiptag = "#vol-read-tip-" + volume_id;
+            var wtiptag = "#vol-write-tip-" + volume_id;
+
+            if (json.read_ops == undefined) {
+                json.read_ops = 'N/A';
+                $(rtag).toggleClass("badge badge-secondary");
+                $(rtiptag).show();
+            }
+            else if (json.read_ops == 'Err') {
+                $(rtag).toggleClass("badge badge-danger");
+            }
+            else if (json.read_ops != 'N/A' && (json.read_ops/30) < 10000) {
+                if ((json.read_ops/30) < 100) {
+                    $(rtag).toggleClass("badge badge-danger");
+                }
+                else {
+                    $(rtag).toggleClass("badge badge-warning");
+                }
+            }
+            else {
+                $(rtag).toggleClass("badge badge-info");
+            }
+
+            if (json.write_ops == undefined) {
+                json.write_ops = 'N/A';
+                $(wtag).toggleClass("badge badge-secondary");
+                $(wtiptag).show();
+            }
+            else if (json.write_ops == 'Err') {
+                $(wtag).toggleClass("badge badge-danger");
+            }
+            else if (json.write_ops != 'N/A' && (json.write_ops/30) < 10000) {
+                if ((json.write_ops/30) < 100) {
+                    $(wtag).toggleClass("badge badge-danger");
+                }
+                else {
+                    $(wtag).toggleClass("badge badge-warning");
+                }
+            }
+            else {
+                $(wtag).toggleClass("badge badge-info");
+            }
+            $(rtag).html(json.read_ops);
+            $(wtag).html(json.write_ops);
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $(rtag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
+<div class="card card-default">
+  <div class="card-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">Volume List (<span class="xbadge"><b>Total: {{ total_vols }} - Orphans: {{ total_orphans }}</b></span>)</button>
+    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="xbadge"><b>${{ total_price }}</b></span></button>
+    <button class="btn btn-warning btn-lg" type="button">Total Size: <span class="xbadge"><b>{{ total_size }}</b> GiB</span></button>
+</h2>
+<table class="table table-hover">
+    <thead><tr><td>Volume ID</td><td>Size</td><td>Attachment</td><td>Device</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
+    <tbody class="table-striped">
+    {% for vol in vol_list %}
+        <tr>
+            <td>{{ vol.volume_id }}</td>
+            <td><span class="badge badge-info">{{ vol.size }} GiB</span></td>
+            <td><span class="badge badge-primary">{{ vol.instance_name }}</span>
+            <td>{{ vol.device }}</td>
+            <td>
+                <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                <span id="vol-read-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+            </td>
+            <td>
+                <span id="vol-write-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                <span id="vol-write-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+                <script>get_vol_ops("{{ vol.volume_id }}")</script>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+  </div>
+</div>
+{% endblock %}

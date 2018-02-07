@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Instances" %}{% endblock %}
+
+{% block content %}
+<script>
+    function get_cpu_load(instance_id, instance_state) {
+        var tag = "#cpu-" + instance_id;
+        var tiptag = "#cpu-tip-" + instance_id;
+
+        if (instance_state != "running") {
+            $(tag).html("N/A");
+            $(tag).toggleClass("badge badge-secondary");
+            $(tiptag).show();
+            return;
+        }
+
+        $.ajax({
+        url : "/web/ajax/get_instance_metrics/{{ current }}/" + instance_id, // the endpoint
+        type : "GET", // http method
+        data : '',
+
+        // handle a successful response
+        success : function(json) {
+            $(tag).html(json.cpu);
+            if (json.cpu > 0.7) {
+                if (json.cpu > 0.9) {
+                    $(tag).toggleClass("badge badge-danger");
+                }
+                else {
+                    $(tag).toggleClass("badge badge-warning");
+                }
+            }
+            else {
+                $(tag).toggleClass("badge badge-info");
+            }
+        },
+
+        // handle a non-successful response
+        error : function(xhr,errmsg,err) {
+            $(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+        });
+     }
+</script>
+<script>
+    var prices = [
+            {
+                category: "General Purpose",
+                prices: {
+                    t2_nano: 5, t2_micro: 10, t2_small: 19, t2_medium: 37, t2_large: 75, t2_xlarge: 150, t2_2xlarge: 300,
+                    m4_large: 83,  m4_xlarge: 165, m4_2xlarge: 330, m4_4xlarge: 660, m4_10xlarge: 1650, m4_16xlarge: 2640,
+                    m3_medium: 54, m3_large: 108, m3_xlarge: 217, m3_2xlarge: 435
+                }
+            },
+            {
+                category: "Compute Optimized",
+                prices: {
+                    c4_large: 84, c4_xlarge: 168, c4_2xlarge: 336, c4_4xlarge: 672, c4_8xlarge: 1350,
+                    c3_large: 90, c3_xlarge: 180, c3_2xlarge: 360, c3_4xlarge: 720, c3_8xlarge: 1440
+                }
+            },
+            {
+                category: "GPU Instances",
+                prices: {
+                    p2_xlarge: 725, p2_8xlarge: 5800, p2_16xlarge: 11600,
+                    g2_2xlarge: 522, g2_8xlarge: 2100
+                }
+            },
+            {
+                category: "Memory Optimized",
+                prices: {
+                    x1_16xlarge: 6000, x1_32xlarge: 12000,
+                    r3_large: 138, r3_xlarge: 276, r3_2xlarge: 552, r3_4xlarge: 1100, r3_8xlarge: 2200,
+                    r4_large: 110, r4_xlarge: 220, r4_2xlarge: 440, r4_4xlarge: 880, r4_8xlarge: 1760, r4_16xlarge: 3250
+                }
+            },
+            {
+                category: "Storage Optimized",
+                prices: {
+                    i3_large: 128, i3_xlarge: 256, i3_2xlarge: 512, i3_4xlarge: 1024, i3_8xlarge: 2048, i3_16xlarge: 4096,
+                    d2_xlarge: 547, d2_2xlarge: 1094, d2_4xlarge: 2188, d2_8xlarge: 4376
+                }
+            },
+            {
+                category: "General Purpose - Previous Generation",
+                prices: {
+                    m1_small: 35, m1_medium: 70, m1_marge: 140, m1_xlarge: 280
+                }
+            },
+            {
+                category: "Compute Optimized - Previous Generation",
+                prices: {
+                    c1_medium: 110, c1_xlarge: 440, cc2_8xlarge: 1674
+                }
+            }
+    ];
+
+    function get_inst_price(model) {
+        model = model.replace('.', '_');
+
+        for (var i = 0; i < prices.length; i++) {
+            if (model in prices[i].prices) {
+                return prices[i].prices[model]
+            }
+        }
+
+        return "???";
+    }
+</script>
+<div class="card card-default">
+  <div class="card-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">Instances List (<span class="xbadge"><b>{{ running_count }}/{{ ec2list|length }}</b></span> running)</button>
+    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="xbadge"><b>${{ price }}</b></span></button>
+</h2>
+<table class="table table-hover">
+    <thead><tr><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td><td>EBS Size</td></tr></thead>
+    <tbody class="table-striped">
+    {% for inst in ec2list %}
+        <tr>
+            <td>{{ inst.name }}</td>
+            <td>
+                {% if inst.instance_state.Name == 'running' %}<span class="badge badge-pill badge-success">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'stopped' %}<span class="badge badge-pill badge-danger">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'terminated' %}<span class="badge badge-pill badge-warning">&nbsp;</span>{% endif %}
+                &nbsp;&nbsp;{{ inst.instance_state.Name }}
+            </td>
+            <td>{% if inst.is_elastic %}<b>{% endif %}{{ inst.public_ip }}{% if inst.is_elastic %}</b>{% endif %}{% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}</td>
+            <td>{{ inst.private_ip }}</td>
+            <td>{{ inst.zone }}</td>
+            <td>{{ inst.instance_type }} <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
+            <td><span class="badge badge-primary">{{ inst.instance_id }}</span></td>
+            <td>
+                <span id="cpu-{{ inst.instance_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                <span id="cpu-tip-{{ inst.instance_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get the CPU load<br>on a non-running Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+                <script>get_cpu_load("{{ inst.instance_id }}", "{{ inst.instance_state.Name }}")</script>
+            </td>
+            <td>
+                <span class="badge badge-info">{{ inst.volume_size }} GiB</span>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+  </div>
+</div>
+<br>
+<div class="card card-default">
+  <div class="card-body">
+      <h3>Pricing List (in $ per month)</h3>
+      <script>
+          /* Display Prices */
+          for (var i = 0; i < prices.length; i++) {
+            var cat = prices[i].category;
+            var pri = prices[i].prices;
+            document.writeln("<h4>" + cat + "</h4>");
+            var curtype = '';
+            for (var k in pri) {
+                if (curtype != k.substr(0,2)) {
+                    if (curtype != '') document.writeln("<br>");
+                    curtype = k.substr(0,2);
+                }
+                document.writeln('<button class="btn btn-outline-secondary btn-sm" type="button">' + k + ' <span class="badge badge-pill badge-dark">' + pri[k].toString() + '</span></button>');
+            }
+          }
+      </script>
+  </div>
+</div>
+{% endblock %}
