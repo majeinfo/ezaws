@@ -114,7 +114,7 @@ def editProfileAction(request):
 
     if request.method == 'POST':
         if 'cancel' in request.POST:
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/web')
 
         form = ProfileForm(request.POST)
         if form.is_valid():

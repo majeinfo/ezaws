@@ -28,22 +28,54 @@
 </head>
 <body>
 
-<div id="wrapper" class="toggled">
-
-    <!-- Sidebar -->
-    <div id="sidebar-wrapper">
-        <ul class="sidebar-nav">
-            <li class="sidebar-brand"><a href="/">EZ AWS ({{ VERSION }})</a></li>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">EZ AWS ({{ VERSION }})</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+        </ul>
+        {% if user.is_authenticated %}
             {% if user.is_superuser %}
-            <li>
+            <li class="nav-item">
                 <select class="form-control cust_name">
                 {% for n in names %}
                     <option {% if n == current %}selected{% endif %}>{{ n }}</option>
                 {% endfor %}
                 </select>
             </li>
+            <li>&nbsp;&nbsp;&nbsp;</li>
             {% endif %}
-            <li><a style="color:#999999;" onclick="goto_console()">AWS Console</a></li>
+        <ul class="navbar-nav mt-2 mt-md-0">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{ user }} <i class="fa fa-user fa-fw"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    {% if not user.is_superuser %}
+                    <a class="dropdown-item" href="{% url 'auth_profile' %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                    <a class="dropdown-item" href="{% url 'check_key' request.session.customer %}"><i class="fa fa-aws fa-fw"></i> Check AWS Keys</a>
+                    <div class="dropdown-divider"></div>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                    <a class="dropdown-item" href="{% url 'admin:index' %}">Administration</a>
+                    <div class="dropdown-divider"></div>
+                    {% endif %}
+                    <a class="dropdown-item" href="{% url 'auth_logout' %}"><i class="fa fa-power-off fa-fw"></i> Logout</a>
+                </div>
+            </li>
+        </ul>
+        {% endif %}
+    </div>
+</nav>
+
+<div id="wrapper" class="toggled">
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <ul class="sidebar-nav">
+            {% if user.is_authenticated %}
+            <li><a style="color:#999999;" onclick="goto_console()">Goto AWS Console</a></li>
             <li><a style="color:#999999;" onclick="show_instances()">Instances</a></li>
             <li><a style="color:#999999;" onclick="show_volumes()">Volumes</a></li>
             <li><a style="color:#999999;" onclick="show_snapshots()">Snapshots</a></li>
@@ -51,14 +83,6 @@
             <li><a style="color:#999999;" onclick="show_elbs()">ELB</a></li>
             <li><a style="color:#999999;" onclick="show_elasticache()">ElastiCache</a></li>
             <li><a style="color:#999999;" onclick="start_audit()">Run Audit</a></li>
-            {% if user.is_authenticated and not user.is_superuser %}
-            <li><a href="{% url 'auth_profile' %}">Your Settings</a></li>
-            <li><a href="{% url 'check_key' request.session.customer %}">Check AWS Keys</a></li>
-            <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
-            {% endif %}
-            {% if user.is_superuser %}
-            <li><a href="{% url 'admin:index' %}">Administration</a></li>
-            <li><a href="{% url 'auth_logout' %}">Logout ({{ user }})</a></li>
             {% endif %}
         </ul>
     </div>
