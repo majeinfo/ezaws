@@ -53,3 +53,13 @@ def get_elasticache(customer):
     '''Create a boto elasticache object to query Customer's Resources'''
     session = get_session(customer)
     return session.client('elasticache')
+
+
+def get_instance_name(inst):
+    # Extract the 'name' from tags
+    if inst.tags:
+         for tag in inst.tags:
+              if tag['Key'] == 'Name':
+                   return tag['Value']
+
+    return None

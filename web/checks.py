@@ -1,8 +1,11 @@
 import boto3
+from datetime import datetime, timedelta
+from django.utils import timezone
 import collections
 import logging
 from datetime import datetime, timedelta
 from . import utils
+import aws.params as p
 import aws.pricing as pricing
 
 std_logger = logging.getLogger('general')
@@ -95,26 +98,57 @@ def check_stopped_instances(customer, instances, volumes):
                     total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
                     break
 
-            stopped_inst[inst.instance_id] = total_vol_size
+            name = utils.get_instance_name(inst)
+            stopped_inst[inst.instance_id] = { 'total_vol_size': total_vol_size, 'name': name }
             total_size += total_vol_size
 
     return { 'stopped_inst': stopped_inst, 'total_size': total_size, 'total_price': total_price }
 
 
-def check_underused_volume(customer, volumes):
+def check_long_time_stopped_instances(customer, instances):
+    stopped_inst = {}
+    for inst in instances:
+        if inst.state['Name'] == 'stopped':
+            print(inst.launch_time)
+            now = timezone.now()
+            past = now - timedelta(days=p.parm_unused_instances_nu_days)
+            print(past)
+            if inst.launch_time < past:
+                name = utils.get_instance_name(inst)
+                stopped_inst[inst.instance_id] = { 'days': (now - inst.launch_time).days, 'name': name }
+
+    return { 'long_time_stopped_inst': stopped_inst }
+
+
+def check_underused_volume(customer, volumes, instances):
     costs = pricing.Pricing(customer.region)
     cloudwatch = utils.get_cloudwatch(customer)
-    nu_days = 30
-    underused_volumes = []
+    nu_days = p.parm_unused_volumes_nu_days
+    underused_volumes = {}
     underused_size = 0
     underused_price = 0
     for vol in volumes:
         read_ops, write_ops = get_cw_volume_iops(cloudwatch, vol.id, nu_days)
         if (read_ops is not None) and (write_ops is not None) and \
-                (read_ops < 100 * nu_days) and (write_ops < 100 * nu_days):
-            underused_volumes.append(vol.id)
+                (read_ops < p.parm_unused_volumes_min_read_ops * nu_days) and \
+                (write_ops < p.parm_unused_volumes_min_write_ops * nu_days):
+            underused_volumes[vol.id] = {}
             underused_size += vol.size
             underused_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
+
+            if (not len(vol.attachments)) or ('InstanceId' not in vol.attachments[0]):
+                continue
+
+            inst_id = vol.attachments[0]['InstanceId']
+            for inst in instances:
+                if inst_id == inst.instance_id:
+                    inst_name = utils.get_instance_name(inst)
+                    if inst_name is None:
+                        inst_name = inst.instance_id
+                    break
+            underused_volumes[vol.id]['inst_name'] = inst_name
+            underused_volumes[vol.id]['vol_size'] = vol.size
+            underused_volumes[vol.id]['device'] = vol.attachments[0]['Device']
 
     return { 'underused_volumes': underused_volumes, 'underused_size': underused_size, 'underused_price' : underused_price }
 

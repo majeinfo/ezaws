@@ -55,7 +55,7 @@ def get_instances(request, cust_name):
         for inst in ec2.instances.all():
             if inst.state['Name'] == 'running': context['running_count'] += 1
 
-            name = _get_instance_name(inst) or ''
+            name = utils.get_instance_name(inst) or ''
 
             ec2list.append({'instance_id': inst.id,
                             'instance_type': inst.instance_type,
@@ -203,7 +203,7 @@ def check_snapshots(request, cust_name):
     try:
         for inst in ec2.instances.all():
             ec2vol[inst.id] = { 'all': [] }
-            name = _get_instance_name(inst) or ''
+            name = utils.get_instance_name(inst) or ''
 
             volumes = inst.volumes.all()
             volume_snapped = volume_count = 0
@@ -413,24 +413,15 @@ def _get_instances_name_cache(ec2):
     '''Returns a dict with inst_id as a key and instance Name as value'''
     cache = collections.defaultdict(str)
     for inst in ec2.instances.all():
-        cache[inst.instance_id] = _get_instance_name(inst) or inst.instance_id
+        cache[inst.instance_id] = utils.get_instance_name(inst) or inst.instance_id
 
     return cache
 
 
-def _get_instance_name_from_id(ec2, inst_id):
-    for inst in ec2.instances.all():
-        if inst.instance_id == inst_id:
-            return _get_instance_name(inst)
+# def _get_instance_name_from_id(ec2, inst_id):
+#     for inst in ec2.instances.all():
+#         if inst.instance_id == inst_id:
+#             return utils.get_instance_name(inst)
+#
+#     return None
 
-    return None
-
-
-def _get_instance_name(inst):
-    # Extract the 'name' from tags
-    if inst.tags:
-         for tag in inst.tags:
-              if tag['Key'] == 'Name':
-                   return tag['Value']
-
-    return None

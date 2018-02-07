@@ -7,6 +7,7 @@ from . import utils
 from .models import Customer
 from .decorators import user_is_owner
 from . import checks as ck
+import aws.params as p
 
 @login_required
 @user_is_owner
@@ -27,6 +28,7 @@ def auditAction(request, cust_name):
         'total_instances': 'N/A', 'stopped_instances': [], 'total_instances_price': 'N/A', 'total_instances_size': 'N/A',
         'orphan_target_groups': [],
         'underused_volumes': [], 'underused_size': 'N/A', 'underused_price': 'N/A',
+        'long_time_stopped_instances': [],
     }
 
     # Get instances
@@ -54,7 +56,7 @@ def auditAction(request, cust_name):
 
     # Check underused Volumes
     try:
-        result = ck.check_underused_volume(customer, volumes)
+        result = ck.check_underused_volume(customer, volumes, instances)
         context['underused_volumes'] = result['underused_volumes']
         context['underused_size'] = result['underused_size']
         context['underused_price'] = result['underused_price']
@@ -111,6 +113,15 @@ def auditAction(request, cust_name):
         context['total_instances'] = len(instances)
         context['total_instances_price'] = result['total_price']
         context['total_instances_size'] = result['total_size']
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'audit.html', context)
+
+    # Check for old and stopped Instances
+    try:
+        result = ck.check_long_time_stopped_instances(customer, instances)
+        context['long_time_stopped_instances'] = result['long_time_stopped_inst']
     except Exception as e:
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)

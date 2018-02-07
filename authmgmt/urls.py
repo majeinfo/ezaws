@@ -8,6 +8,7 @@ urlpatterns = [
     path('logout', auth.logoutAction, name='auth_logout'),
     path('signup', auth.signupAction, name='auth_signup'),
     path('profile', auth.editProfileAction, name='auth_profile'),
+    path('change_password', auth.changePasswordAction, name='change_password'),
     path('check_key/<cust_name>', auth.checkKeyAction, name='check_key'),
     path('hook_deploy', auth.hookDeployAction, name='hook_deploy'),
     path('', auth.indexAction, name='auth_index'),

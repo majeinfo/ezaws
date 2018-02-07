@@ -55,7 +55,8 @@
                 <div class="dropdown-menu dropdown-menu-right">
                     {% if not user.is_superuser %}
                     <a class="dropdown-item" href="{% url 'auth_profile' %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
-                    <a class="dropdown-item" href="{% url 'check_key' request.session.customer %}"><i class="fa fa-aws fa-fw"></i> Check AWS Keys</a>
+                    <a class="dropdown-item" href="{% url 'check_key' request.session.customer %}"><i class="fa fa-key fa-fw"></i> Check AWS Keys</a>
+                    <a class="dropdown-item" href="{% url 'change_password' %}"><i class="fa fa-unlock fa-fw"></i>Change Password</a>
                     <div class="dropdown-divider"></div>
                     {% endif %}
                     {% if user.is_superuser %}
@@ -72,7 +73,7 @@
 
 <div id="wrapper" class="toggled">
     <!-- Sidebar -->
-    <div id="sidebar-wrapper">
+    <div id="sidebar-wrapper" style="position:absolute;">
         <ul class="sidebar-nav">
             {% if user.is_authenticated %}
             <li><a style="color:#999999;" onclick="goto_console()">Goto AWS Console</a></li>

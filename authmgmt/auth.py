@@ -9,6 +9,8 @@ from django.utils.translation import ugettext as _
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from .forms import LoginForm, SubscribeForm, ProfileForm
 from web.models import User, Customer
 from web.utils import get_customer, get_customers
@@ -145,6 +147,27 @@ def editProfileAction(request):
     return render(request, 'profile.html', { 'form': form, 'next': request.GET.get('next', '') })
 
 
+@login_required
+def changePasswordAction(request):
+    if request.method == 'POST':
+        if 'cancel' in request.POST:
+            return HttpResponseRedirect('/web')
+
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return HttpResponseRedirect('/web')
+        else:
+            messages.error(request, 'Please correct the error below.')
+
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'change_password.html', { 'form': form })
+
+
+@login_required
 def checkKeyAction(request, cust_name):
     names = get_customers()
 

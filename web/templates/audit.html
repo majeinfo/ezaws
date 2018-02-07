@@ -92,7 +92,12 @@
         <td>{% if stopped_instances|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ stopped_instances|length }}</span></td>
         <td>
             {% for key, value in stopped_instances.items %}
-                <span class="badge badge-primary">{{ key }}</span>&nbsp;<span class="badge badge-info">{{ value }} GiB</span>
+                {% if value.name %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.name}}" class="badge badge-primary">{{ key }}</span>
+                {% else %}
+                    <span class="badge badge-primary">{{ key }}</span>
+                {% endif %}
+                &nbsp;<span class="badge badge-info">{{ value.total_vol_size }} GiB</span>
             {% endfor %}
         </td>
         <td>{% if total_instances_size %}
@@ -138,8 +143,12 @@
         <td><span class="badge badge-success">{{ total_vols }}</span></td>
         <td>{% if underused_volumes|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ underused_volumes|length }}</span></td>
         <td>
-            {% for vol in underused_volumes %}
-                <span class="badge badge-primary">{{ vol }}</span>&nbsp;
+            {% for vol, value in underused_volumes.items %}
+                {% if value.inst_name %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.inst_name}} ({{ value.device }})" class="badge badge-primary">{{ vol }}</span>&nbsp;
+                {% else %}
+                    <span class="badge badge-primary">{{ vol }}</span>&nbsp;
+                {% endif %}
             {% endfor %}
         </td>
         <td><span class="badge badge-info">{{ underused_size }} GiB</span></td>
@@ -150,6 +159,25 @@
                 <span class="badge badge-secondary">{{ underused_price }}</span>
             {% endif %}
         </td>
+    </tr>
+
+    <!-- Display long time stopped instances -->
+    <tr>
+        <td><span class="btn btn-info">Long Time stopped Instances</span></td>
+        <td><span class="badge badge-success">{{ total_instances }}</span></td>
+        <td>{% if long_time_stopped_instances|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ long_time_stopped_instances|length }}</span></td>
+        <td>
+            {% for key, value in long_time_stopped_instances.items %}
+                {% if value.name %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.name}}" class="badge badge-primary">{{ key }}</span>
+                {% else %}
+                    <span class="badge badge-primary">{{ key }}</span>
+                {% endif %}
+                &nbsp;<span class="badge badge-info">{{ value.days }} days</span>
+            {% endfor %}
+        </td>
+        <td></td>
+        <td></td>
     </tr>
 
     </tbody>
