@@ -192,7 +192,7 @@ def checkKeyAction(request, cust_name):
 @csrf_exempt
 def hookDeployAction(request):
     # Should be in another Controller - normally called by DockerHub as a hook
-    json_data = json.loads(request.body)
+    json_data = json.loads(str(request.body))
     tag = json_data['push_data']['tag']
 
     #os.system('sudo -u ezaws /home/ezaws/restart.sh')
