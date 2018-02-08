@@ -38,14 +38,16 @@
         </ul>
         {% if user.is_authenticated %}
             {% if user.is_superuser %}
-            <li class="nav-item">
-                <select class="form-control cust_name">
-                {% for n in names %}
-                    <option {% if n == current %}selected{% endif %}>{{ n }}</option>
-                {% endfor %}
-                </select>
-            </li>
-            <li>&nbsp;&nbsp;&nbsp;</li>
+            <ul class="navbar-nav mt-2 mt-md-0">
+                <li class="nav-item">
+                    <select class="form-control cust_name">
+                    {% for n in names %}
+                        <option {% if n == current %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                    </select>
+                </li>
+                <li>&nbsp;&nbsp;&nbsp;</li>
+            </ul>
             {% endif %}
         <ul class="navbar-nav mt-2 mt-md-0">
             <li class="nav-item dropdown">
@@ -78,6 +80,7 @@
             {% if user.is_authenticated %}
             <li><a style="color:#999999;" onclick="goto_console()">Goto AWS Console</a></li>
             <li><a style="color:#999999;" onclick="show_instances()">Instances</a></li>
+            <li><a style="color:#999999;" onclick="show_reserved_instances()">Reserved Instances</a></li>
             <li><a style="color:#999999;" onclick="show_volumes()">Volumes</a></li>
             <li><a style="color:#999999;" onclick="show_snapshots()">Snapshots</a></li>
             <li><a style="color:#999999;" onclick="check_snapshots()">Check Snapshots</a></li>
@@ -150,6 +153,11 @@ function goto_console() {
 function show_instances() {
     var cust_name = get_cust_name();
     window.location = '/web/get_instances/' + cust_name;
+}
+
+function show_reserved_instances() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_reserved_instances/' + cust_name;
 }
 
 function show_volumes() {

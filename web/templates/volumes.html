@@ -72,19 +72,19 @@
 <div class="card card-default">
   <div class="card-body">
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">Volume List (<span class="xbadge"><b>Total: {{ total_vols }} - Orphans: {{ total_orphans }}</b></span>)</button>
-    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="xbadge"><b>${{ total_price }}</b></span></button>
-    <button class="btn btn-warning btn-lg" type="button">Total Size: <span class="xbadge"><b>{{ total_size }}</b> GiB</span></button>
+    <button class="btn btn-primary btn-lg" type="button">Volume List <span class="badge badge-light"><b>Total: {{ total_vols }} - Orphans: {{ total_orphans }}</b></span></button>
+    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="badge badge-light"><b>${{ total_price }}</b></span></button>
+    <button class="btn btn-warning btn-lg" type="button">Total Size: <span class="badge badge-light"><b>{{ total_size }}</b> GiB</span></button>
 </h2>
 <table class="table table-hover">
     <thead><tr><td>Volume ID</td><td>Size</td><td>Attachment</td><td>Device</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
     <tbody class="table-striped">
     {% for vol in vol_list %}
         <tr>
-            <td>{{ vol.volume_id }}</td>
+            <td><span class="badge badge-dark">{{ vol.volume_id }}</span></td>
             <td><span class="badge badge-info">{{ vol.size }} GiB</span></td>
             <td><span class="badge badge-primary">{{ vol.instance_name }}</span>
-            <td>{{ vol.device }}</td>
+            <td><span class="badge badge-success">{{ vol.device }}</span></td>
             <td>
                 <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
                 <span id="vol-read-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>

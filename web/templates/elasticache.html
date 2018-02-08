@@ -54,16 +54,16 @@
 <div class="card card-default">
   <div class="card-body">
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">ElastiCache List : <span class="xbadge"><b>{{ cachelist|length }}</b></span> defined</button>
-    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span> (without Data Transfer)</button>
+    <button class="btn btn-primary btn-lg" type="button">ElastiCache List <span class="badge badge-light"><b>{{ cachelist|length }}</b></span></button>
+    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="badge badge-light"><b>${{ price }}</b></span> (without Data Transfer)</button>
 </h2>
 <table class="table table-hover">
     <thead><td>Name</td><td>Type (Price per month)</td><td>Engine</td><td>#Nodes</td><td>Availability Zone</td><td>Max/Avg.CPU (%)<br>(last 24h)</td><td>Total Gets<br>(last 24h)</td></thead>
     <tbody class="table-striped">
     {% for cache in cachelist %}
         <tr>
-            <td>{{ cache.name }}</td>
-            <td>{{ cache.type }} <span class="badge badge-secondary">{{ cache.price }}</span></td>
+            <td><h5><span class="badge badge-dark">{{ cache.name }}</span></h5></td>
+            <td><span class="badge badge-success">{{ cache.type }}</span> <span class="badge badge-secondary">{{ cache.price }}</span></td>
             <td>{{ cache.engine }} {{ cache.engineVersion }}</td>
             <td><span class="badge badge-success">{{ cache.numnodes }}</span></td>
             <td>{{ cache.availzone }}</td>

@@ -28,7 +28,7 @@ DEBUG = os.environ['DEBUG'] if 'DEBUG' in os.environ else True
 # Current Version
 VERSION = os.environ['VERSION'] if 'VERSION' in os.environ else 'dev'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ 'localhost', 'ezaws.delamarche.com' ]
 
 DEFAULT_FROM_EMAIL = 'support@delamarche.com'
 EMAIL_HOST = os.environ['EMAIL_HOST'] if 'EMAIL_HOST' in os.environ else 'smtp.free.fr'

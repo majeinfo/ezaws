@@ -4,21 +4,21 @@
 
 {% block content %}
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">Snapshots List (<span class="xbadge"><b>{{ snaplist|length }}</b></span>)</button>
+    <button class="btn btn-primary btn-lg" type="button">Snapshots List <span class="badge badge-light"><b>{{ snaplist|length }}</b></span></button>
     <button class="btn btn-warning btn-lg" type="button">
         Total Size:
-        <span class="xbadge"><b>{{ total_min_size}}-{{ total_max_size }} GiB</b> - </span>
-        Total Price per Month: <span class="xbadge"><b>$ {{ total_min_price }}-{{ total_max_price }}</b></span>
+        <span class="badge badge-light"><b>{{ total_min_size}}-{{ total_max_size }} GiB</b> - </span>
+        Total Price per Month: <span class="badge badge-light"><b>$ {{ total_min_price }}-{{ total_max_price }}</b></span>
     </button>
 </h2>
 <table class="table table-hover">
-    <thead><td>Snapshot Id</td><td>State</td><td>Start Time</td><td>Volume ID</td><td>Volume Size</td></thead>
+    <thead><td>Snapshot Id</td><!--<td>State</td>--><td>Start Time</td><td>Volume ID</td><td>Volume Size</td></thead>
     <tbody class="table-striped">
     {% for snap in snaplist %}
         <tr>
-            <td>{{ snap.SnapshotId }}</td>
-            <td>{{ snap.State }}</td>
-            <td>{{ snap.StartTime }}</td>
+            <td><span class="badge badge-dark">{{ snap.SnapshotId }}</span></td>
+            <!-- <td>{{ snap.State }}</td> -->
+            <td><span class="badge badge-success">{{ snap.StartTime }}</span></td>
             <td><span class="badge badge-primary">{{ snap.VolumeId }}</span></td>
             <td><span class="badge badge-info">{{ snap.VolumeSize }} GiB</span></td>
         </tr>

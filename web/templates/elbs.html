@@ -57,18 +57,18 @@
 <div class="card card-default">
   <div class="card-body">
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">ELB List : <span class="xbadge"><b>{{ elblist|length }}</b></span> defined</button>
-    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="xbadge"><b>${{ price }}</b></span> (without Data Transfer nor LCU)</button>
+    <button class="btn btn-primary btn-lg" type="button">ELB List : <span class="badge badge-light"><b>{{ elblist|length }}</b></span></button>
+    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="badge badge-light"><b>${{ price }}</b></span> (without Data Transfer nor LCU)</button>
 </h2>
 <table class="table table-hover">
     <thead><td>Name</td><td>Type (Price per month)</td><td>DNS Name</td><td>Listeners</td><td>Instances</td><td>Count</td><td>#Request<br>(last 24h)</td><td>Target Groups</td><td>Domains</td></thead>
     <tbody class="table-striped">
     {% for elb in elblist %}
         <tr>
-            <td>{{ elb.name }}</td>
-            <td>{{ elb.type }} <span class="badge badge-secondary"><script>document.writeln(get_elb_price("{{ elb.type }}"))</script></span></td>
+            <td><h5><span class="badge badge-dark">{{ elb.name }}</span></h5></td>
+            <td>{{ elb.type|slice:":4" }} <span class="badge badge-secondary"><script>document.writeln(get_elb_price("{{ elb.type }}"))</script></span></td>
             <td>{{ elb.DNSName }}</td>
-            <td>{% for lis in elb.listeners %}{{ lis }}{% if not forloop.last %},{% endif %}{% endfor %}</td>
+            <td>{% for lis in elb.listeners %}<span class="badge badge-success">{{ lis }}</span>{% if not forloop.last %} {% endif %}{% endfor %}</td>
             <td>{% if elb.instances|length == 0 %}<span class="badge badge-danger">&nbsp;</span>{% endif %}{% for inst in elb.instances %}<span class="badge badge-primary">{{ inst }}{% if not forloop.last %}</span>&nbsp;{% endif %}{% endfor %}</td>
             <td>{% if elb.instances|length == 0 %}<span class="badge badge-danger">&nbsp{% else %}<span class="badge badge-success">&nbsp{% endif %}{{ elb.instances|length }}</span></td>
             <td>
@@ -78,7 +78,7 @@
             <td>{% for tgt in elb.target_groups %}{{ tgt }}{% if not forloop.last %},{% endif %}{% empty %}-{% endfor %}</td>
             <td>
                 {% for zone in elb.zones %}
-                    {{ zone }}&nbsp;
+                <span class="badge badge-success">{{ zone }}</span>&nbsp;
                 {% empty %}
                 <span class="badge badge-danger">empty ?</span>
                 {% endfor %}

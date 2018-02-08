@@ -179,6 +179,7 @@ def checkKeyAction(request, cust_name):
     perms = [
         { 'perm': 'ec2_describe_addresses', 'iam_perm': 'ec2:DescribeAddresses', 'desc': 'List Elastic IP' },
         { 'perm': 'ec2_describe_instances', 'iam_perm': 'ec2:DescribeInstances', 'desc': 'List Instances' },
+        { 'perm': 'ec2_describe_reserved_instances', 'iam_perm': 'ec2:DescribeReservedInstances', 'desc': 'List Reserved Instances' },
         { 'perm': 'ec2_describe_volumes', 'iam_perm': 'ec2:DescribeVolumes', 'desc': 'List Volumes' },
         { 'perm': 'ec2_describe_snapshots', 'iam_perm': 'ec2:DescribeSnapshots', 'desc': 'List Snapshots' },
         { 'perm': 'ec2_describe_images', 'iam_perm': 'ec2:DescribeImages', 'desc': 'List Images' },

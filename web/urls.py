@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^ajax/get_cache_metrics/(?P<cust_name>[^/]+)/(?P<cache_type>[^/]+)/(?P<cache_name>.+)', ajax.get_cache_metrics, name='get_cache_metrics'),
     url(r'^ajax/check_permission/(?P<cust_name>[^/]+)/(?P<perm>.*)', ajax.check_permission, name='check_permission'),
     url(r'^get_instances/(?P<cust_name>.*)', views.get_instances, name='get_instances'),
+    url(r'^get_reserved_instances/(?P<cust_name>.*)', views.get_reserved_instances, name='get_reserved_instances'),
     url(r'^get_volumes/(?P<cust_name>.*)', views.get_volumes, name='get_volumes'),
     url(r'^get_snapshots/(?P<cust_name>.*)', views.get_snapshots, name='get_snapshots'),
     url(r'^check_snapshots/(?P<cust_name>.*)', views.check_snapshots, name='check_snapshots'),

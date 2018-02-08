@@ -1,5 +1,7 @@
 import collections
 import logging
+from django.utils import timezone
+from datetime import datetime, timedelta
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
@@ -92,6 +94,47 @@ def get_instances(request, cust_name):
         return render(request, 'instances.html', context)
 
     return render(request, 'instances.html', context)
+
+
+@login_required
+@user_is_owner
+@aws_defined
+def get_reserved_instances(request, cust_name):
+    names = utils.get_customers()
+    customer = utils.get_customer(cust_name)
+    client = utils.get_client(customer, 'ec2')
+    session = utils.get_session(customer)
+    costs = pricing.Pricing(customer.region)
+
+    rsvlist = []
+    context = {'current': cust_name, 'names': names, 'rsvlist': rsvlist, 'price': 0 }
+    now = timezone.now()
+
+    try:
+        #rsvlist = client.describe_reserved_instances(Filters=[ {'Name': 'availability-zone', 'Values':[ customer.region ]}] )
+        rsvds = client.describe_reserved_instances(Filters=[ {'Name': 'state', 'Values': ['active']} ])
+
+        for rsv in rsvds['ReservedInstances']:
+            rsvlist.append({
+                'reservedInstancesId': rsv['ReservedInstancesId'],
+                'productDescription': rsv['ProductDescription'],
+                'fixedPrice': int(rsv['FixedPrice']),
+                'monthlyPrice': int(rsv['RecurringCharges'][0]['Amount'] * 24 * 31),
+                'scope': rsv['Scope'],
+                'offeringClass': rsv['OfferingClass'],
+                'offeringType': rsv['OfferingType'],
+                'instanceCount': rsv['InstanceCount'],
+                'instanceType': rsv['InstanceType'],
+                #'availabilityZone': rsv['AvailabilityZone'],
+                'endtime': rsv['End'],
+                'timealert': 'danger' if rsv['End'] <= now else ('warning' if rsv['End'] > now - timedelta(30) else 'success')
+            })
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'reserved_instances.html', context)
+
+    return render(request, 'reserved_instances.html', context)
 
 
 @login_required

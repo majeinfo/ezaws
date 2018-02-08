@@ -113,15 +113,15 @@
 <div class="card card-default">
   <div class="card-body">
 <h2>
-    <button class="btn btn-primary btn-lg" type="button">Instances List (<span class="xbadge"><b>{{ running_count }}/{{ ec2list|length }}</b></span> running)</button>
-    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="xbadge"><b>${{ price }}</b></span></button>
+    <button class="btn btn-primary btn-lg" type="button">Instances List (<span class="badge badge-light"><b>{{ running_count }}/{{ ec2list|length }}</b></span> running)</button>
+    <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="badge badge-light"><b>${{ price }}</b></span></button>
 </h2>
 <table class="table table-hover">
     <thead><tr><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td><td>EBS Size</td></tr></thead>
     <tbody class="table-striped">
     {% for inst in ec2list %}
         <tr>
-            <td>{{ inst.name }}</td>
+            <td><h5><span class="badge badge-dark">{{ inst.name }}</span></h5></td>
             <td>
                 {% if inst.instance_state.Name == 'running' %}<span class="badge badge-pill badge-success">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'stopped' %}<span class="badge badge-pill badge-danger">&nbsp;</span>{% endif %}
@@ -131,7 +131,7 @@
             <td>{% if inst.is_elastic %}<b>{% endif %}{{ inst.public_ip }}{% if inst.is_elastic %}</b>{% endif %}{% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}</td>
             <td>{{ inst.private_ip }}</td>
             <td>{{ inst.zone }}</td>
-            <td>{{ inst.instance_type }} <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
+            <td><span class="badge badge-success">{{ inst.instance_type }}</span> <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
             <td><span class="badge badge-primary">{{ inst.instance_id }}</span></td>
             <td>
                 <span id="cpu-{{ inst.instance_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>

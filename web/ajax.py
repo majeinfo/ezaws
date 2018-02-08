@@ -39,6 +39,9 @@ def check_permission(request, cust_name, perm):
         if perm == 'ec2_describe_addresses':
             client = utils.get_client(customer, 'ec2')
             ips = client.describe_addresses()
+        elif perm == 'ec2_describe_reserved_instances':
+            client = utils.get_client(customer, 'ec2')
+            rsvd = client.describe_reserved_instances()
         elif perm == 'ec2_describe_instances':
             ec2 = list(session.resource('ec2').instances.all())
         elif perm == 'ec2_describe_volumes':
@@ -75,6 +78,8 @@ def check_permission(request, cust_name, perm):
         elif perm == 'elasticache_describe_clusters':
             client = utils.get_elasticache(customer)
             caches = client.describe_cache_clusters()
+        else:
+            value = 'unkonwn'
 
     except Exception as e:
         value = False
