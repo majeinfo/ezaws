@@ -12,5 +12,6 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ezaws.settings")
+os.environ.setdefault("EMAIL_HOST", "localhost")
 
 application = get_wsgi_application()

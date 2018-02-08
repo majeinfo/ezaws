@@ -51,6 +51,7 @@ def signupAction(request):
             customer.save()
             customer.admins.add(user)
             login(request, user)
+            request.session['customer'] = n
             messages.info(request, _(
                 'Your Account has been created successfully ! Click <a href="/auth/profile">here</a> to complete your Profile'),
                           extra_tags='safe')

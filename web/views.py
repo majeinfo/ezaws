@@ -96,6 +96,7 @@ def get_instances(request, cust_name):
 
 @login_required
 @user_is_owner
+@aws_defined
 def get_volumes(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -141,6 +142,7 @@ def get_volumes(request, cust_name):
 # TODO: use the Paginator with the Snapshots
 @login_required
 @user_is_owner
+@aws_defined
 def get_snapshots(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -176,6 +178,7 @@ def get_snapshots(request, cust_name):
 
 @login_required
 @user_is_owner
+@aws_defined
 def check_snapshots(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -237,6 +240,7 @@ def check_snapshots(request, cust_name):
 
 @login_required
 @user_is_owner
+@aws_defined
 def get_elbs(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -365,6 +369,7 @@ def _find_elb(rr_name, value, elblist):
 
 @login_required
 @user_is_owner
+@aws_defined
 def get_elasticache(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)

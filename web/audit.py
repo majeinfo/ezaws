@@ -5,12 +5,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from . import utils
 from .models import Customer
-from .decorators import user_is_owner
+from .decorators import user_is_owner, aws_defined
 from . import checks as ck
 import aws.params as p
 
 @login_required
 @user_is_owner
+@aws_defined
 def auditAction(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
