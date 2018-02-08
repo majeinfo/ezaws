@@ -14,6 +14,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from .forms import LoginForm, SubscribeForm, ProfileForm
 from web.models import User, Customer
 from web.utils import get_customer, get_customers
+from web.decorators import user_is_owner, aws_defined
 
 std_logger = logging.getLogger('general')
 
@@ -169,8 +170,11 @@ def changePasswordAction(request):
 
 
 @login_required
+@user_is_owner
+@aws_defined
 def checkKeyAction(request, cust_name):
     names = get_customers()
+
 
     perms = [
         { 'perm': 'ec2_describe_addresses', 'iam_perm': 'ec2:DescribeAddresses', 'desc': 'List Elastic IP' },
