@@ -9,7 +9,13 @@
         <button class="btn btn-primary btn-lg" type="button">Reserved Instances List <span class="badge badge-light"><b>{{ rsvlist|length }}</b></span></button>
     </h2>
     <table class="table table-hover">
-        <thead><tr><td>Description</td><td>Model Type</td><td>Count</td><td>End Time</td><td>Offering Class</td><td>Offering Type</td><td>Tenancy</td><td>Scope</td><td>Price(/1)</td><td>Matching EC2 Instances</td></tr></thead>
+        <thead>
+            <tr>
+                <td>Description</td><td>Model Type</td><td>Count</td><td>End Time</td><td>Offering Class</td>
+                <td>Offering Type</td><td>Tenancy</td><td>Scope</td><td>Price(/1)</td><td>Matching EC2 Instances</td>
+                <td>Unused Capacity</td>
+            </tr>
+        </thead>
         <tbody class="table-striped">
         {% for inst in rsvlist %}
             <tr>
@@ -27,6 +33,17 @@
                     {% for ec2 in inst.allocated_ec2.ec2_instances %}
                     <span data-toggle="tooltip" data-placement="top" title="{{ ec2.type }} ({{ ec2.percent }}%)" class="badge badge-primary">{{ ec2.name }}</span>
                     {% endfor %}
+                </td>
+                <td>
+                    {% if inst.allocated_ec2.remaining_size > 50 %}
+                    <span class="badge badge-alert">
+                    {% elif inst.allocated_ec2.remaining_size > 0 %}
+                    <span class="badge badge-warning">
+                    {% else %}
+                    <span class="badge badge-success">
+                    {% endif %}
+                    {{ inst.allocated_ec2.remaining_size }}
+                    </span>
                 </td>
             </tr>
         {% endfor %}

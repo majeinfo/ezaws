@@ -2,9 +2,14 @@ import boto3
 from django.contrib import messages
 from . import utils
 
-zone_rsets = {}
+zone_rsets = None
+volumes = None
 
 def get_domains(request, customer):
+    global zone_rsets
+    if zone_rsets:
+        return zone_rsets
+
     session = utils.get_session(customer)
     route53 = session.client('route53')
     maxItems = '200'  # TODO: set parameter
@@ -56,5 +61,25 @@ def get_domains(request, customer):
             messages.error(request, e)
 
     return zone_rsets
+
+
+# TODO: need for a Paginator ?
+def get_volumes(request, customer):
+    global volumes
+    if volumes:
+        return volumes
+
+    session = utils.get_session(customer)
+    ec2 = session.resource('ec2')
+
+    try:
+        volumes = list(ec2.volumes.all())
+    except Exception as e:
+        if request:
+            messages.error(request, e)
+        return None
+
+    return volumes
+
 
 

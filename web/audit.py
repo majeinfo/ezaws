@@ -8,6 +8,7 @@ from .models import Customer
 from .decorators import user_is_owner, aws_defined
 from . import checks as ck
 import aws.params as p
+from . import cache
 
 @login_required
 @user_is_owner
@@ -19,6 +20,7 @@ def auditAction(request, cust_name):
     # Get resources
     session = utils.get_session(customer)
     ec2 = session.resource('ec2')
+    client = utils.get_client(customer, 'ec2')
 
     # Initialize Reponse Context
     context = {
@@ -29,7 +31,8 @@ def auditAction(request, cust_name):
         'total_instances': 'N/A', 'stopped_instances': [], 'total_instances_price': 'N/A', 'total_instances_size': 'N/A',
         'orphan_target_groups': [],
         'underused_volumes': [], 'underused_size': 'N/A', 'underused_price': 'N/A',
-        'long_time_stopped_instances': [],
+        'long_time_stopped_instances': [], 'long_time_stopped_inst_vol_size': 0, 'long_time_stopped_inst_vol_price': 0,
+        'total_ri': 0, 'ri_not_filled': {}, 'ec2_without_ri': [],
     }
 
     # Get instances
@@ -41,17 +44,15 @@ def auditAction(request, cust_name):
         return render(request, 'audit.html', context)
 
     # Check Orphan Volumes
-    volumes = []
-    try:
-        volumes = list(ec2.volumes.all())
+    volumes = cache.get_volumes(request, customer)
+    if volumes:
         result = ck.check_orphan_volumes(customer, volumes)
         context['orphan_vols'] = result['orphans']
         context['total_vols'] = len(volumes)
         context['vol_sizes'] = result['vol_sizes']
         context['total_vols_size'] = result['total_size']
         context['total_vols_price'] = int(result['total_price'])
-    except Exception as e:
-        messages.error(request, e)
+    else:
         utils.check_perm_message(request, cust_name)
         return render(request, 'audit.html', context)
 
@@ -123,6 +124,32 @@ def auditAction(request, cust_name):
     try:
         result = ck.check_long_time_stopped_instances(customer, instances)
         context['long_time_stopped_instances'] = result['long_time_stopped_inst']
+        for inst in context['long_time_stopped_instances']:
+            size, price = utils.get_ec2_volume_size_price(customer, inst, volumes)
+            context['long_time_stopped_inst_vol_size'] += size
+            context['long_time_stopped_inst_vol_price'] += price
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'audit.html', context)
+
+    # Analyze the RI usage
+    try:
+        rsvds = client.describe_reserved_instances(Filters=[{'Name': 'state', 'Values': ['active']}])
+        context['total_ri'] = len(rsvds)
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'audit.html', context)
+
+    try:
+        rsv_allocation, unused_ec2 = ck.check_reserved_instances(customer, rsvds['ReservedInstances'], list(ec2.instances.all()))
+        not_filled = {}
+        for rsv_id, value in rsv_allocation.items():
+            if value['remaining_size']:
+                not_filled[rsv_id] = value['remaining_size']
+        context['ri_not_filled'] = not_filled
+        context['ec2_without_ri'] = unused_ec2
     except Exception as e:
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)

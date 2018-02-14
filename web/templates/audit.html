@@ -176,6 +176,49 @@
                 &nbsp;<span class="badge badge-info">{{ value.days }} days</span>
             {% endfor %}
         </td>
+        <td><span class="badge badge-info">{{ long_time_stopped_inst_vol_size }} GiB</span></td>
+        <td>
+            {% if long_time_stopped_inst_vol_price %}
+                <span class="badge badge-warning">{{ long_time_stopped_inst_vol_price }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ long_time_stopped_inst_vol_price }}</span>
+            {% endif %}
+        </td>
+    </tr>
+
+    <!-- Display underused Reserved Instances -->
+    <tr>
+        <td><span class="btn btn-info">Underused Reserved Instances</span></td>
+        <td><span class="badge badge-success">{{ total_ri }}</span></td>
+        <td>{% if ri_not_filled|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ ri_not_filled|length }}</span></td>
+        <td>
+            {% for key, value in ri_not_filled.items %}
+                <span class="badge badge-primary">{{ key }}</span>
+                <span class="badge badge-info">{{ value }}</span>
+            {% endfor %}
+        </td>
+        <td></td>
+        <td></td>
+    </tr>
+
+    <!-- Display Instances that could be associated to RI -->
+    <tr>
+        <td><span class="btn btn-info">Instances not associated with RI</span></td>
+        <td><span class="badge badge-success">{{ total_instances }}</span></td>
+        <td>{% if ec2_without_ri|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ ec2_without_ri|length }}</span></td>
+        <td>
+            {% for key, value in ec2_without_ri.items %}
+                {% if value.days > 180 %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.inst.instance_type }} ({{ value.days }} days)" class="badge badge-danger">
+                {% elif value.days > 180 %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.inst.instance_type }} ({{ value.days }} days)" class="badge badge-warning">
+                {% else %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ value.inst.instance_type }} ({{ value.days }} days)" class="badge badge-primary">
+                {% endif %}
+                {{ value.name }}</span>
+                <!-- <span class="badge badge-info">{{ value }}</span> -->
+            {% endfor %}
+        </td>
         <td></td>
         <td></td>
     </tr>

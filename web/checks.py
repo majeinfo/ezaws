@@ -92,12 +92,14 @@ def check_stopped_instances(customer, instances, volumes):
     for inst in instances:
         if inst.state['Code'] == 80: # 08 = 'stopped'
             # Compute the Volumes size
-            total_vol_size = 0
-            for vol in volumes:
-                if len(vol.attachments) and vol.attachments[0]['InstanceId'] == inst.instance_id:
-                    total_vol_size += vol.size
-                    total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
-                    break
+            total_vol_size, price = utils.get_ec2_volume_size_price(customer, inst.instance_id, volumes)
+            total_price += price
+
+            # for vol in volumes:
+            #     if len(vol.attachments) and vol.attachments[0]['InstanceId'] == inst.instance_id:
+            #         total_vol_size += vol.size
+            #         total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
+            #         #break
 
             name = utils.get_instance_name(inst)
             stopped_inst[inst.instance_id] = { 'total_vol_size': total_vol_size, 'name': name }
@@ -110,7 +112,7 @@ def check_long_time_stopped_instances(customer, instances):
     stopped_inst = {}
     for inst in instances:
         if inst.state['Name'] == 'stopped':
-            print(inst.launch_time)
+            #print(inst.launch_time)
             now = timezone.now()
             past = now - timedelta(days=p.parm_unused_instances_nu_days)
             print(past)
@@ -227,7 +229,7 @@ def get_cw_volume_iops(cw, volume_id, nu_days):
 # }
 def check_reserved_instances(customer, rsvlist, ec2list):
     rsv_alloc = {}
-    unused_ec2 = {}     # unused_ec2[inst_id] = percentage_of_unused
+    unused_ec2 = {}     # unused_ec2[inst_id] = { 'inst': <instance>, 'name': <name>, 'value': <percentage_of_unused>, 'days': <value in days> }
 
     # Init rsv_alloc:
     for rsv in rsvlist:
@@ -239,8 +241,14 @@ def check_reserved_instances(customer, rsvlist, ec2list):
                              'ec2_instances': [], 'remaining_size': rsv_norm_size * rsv_count}
 
     # Init unused_ec2
+    now = timezone.now()
     for ec2 in ec2list:
-        unused_ec2[ec2.id] = 100.0
+        if not utils.instance_is_running(ec2):
+            continue
+        ec2_type = ec2.instance_type
+        unused_ec2[ec2.id] = {'inst': ec2, 'name': utils.get_instance_name(ec2),
+                              'value': awsdef.instance_normalization[ec2_type.split('.')[1]],
+                              'days': (now - ec2.launch_time).days}
 
     # Look for matching EC2 for RI which scope is AZ
     for rsv in rsvlist:

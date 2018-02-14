@@ -2,6 +2,7 @@ import boto3
 from django.contrib import messages
 from .models import Customer
 import aws.definitions as awsdef
+import aws.pricing as pricing
 
 
 def check_perm_message(request, cust_name):
@@ -67,3 +68,16 @@ def get_instance_name(inst):
 
 def instance_is_running(inst):
     return inst.state['Name'] == awsdef.EC2_RUNNING
+
+
+def get_ec2_volume_size_price(customer, inst_id, volumes):
+    total_vol_size = 0
+    total_price = 0
+    costs = pricing.Pricing(customer.region)
+
+    for vol in volumes:
+        if len(vol.attachments) and vol.attachments[0]['InstanceId'] == inst_id:
+            total_vol_size += vol.size
+            total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
+
+    return total_vol_size, total_price
