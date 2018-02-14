@@ -9,19 +9,25 @@
         <button class="btn btn-primary btn-lg" type="button">Reserved Instances List <span class="badge badge-light"><b>{{ rsvlist|length }}</b></span></button>
     </h2>
     <table class="table table-hover">
-        <thead><tr><td>Description</td><td>Model Type</td><td>Count</td><td>Scope</td><td>End Time</td><td>Offering Class</td><td>Offering Type</td><td>Price</td></tr></thead>
+        <thead><tr><td>Description</td><td>Model Type</td><td>Count</td><td>End Time</td><td>Offering Class</td><td>Offering Type</td><td>Tenancy</td><td>Scope</td><td>Price(/1)</td><td>Matching EC2 Instances</td></tr></thead>
         <tbody class="table-striped">
         {% for inst in rsvlist %}
             <tr>
-                <td><h5><span class="badge badge-dark">{{ inst.productDescription }}</span></h5></td>
+                <td><h5><span data-toggle="tooltip" data-placement="top" title="{{ inst.reservedInstancesId }}" class="badge badge-dark">{{ inst.productDescription }}</span></h5></td>
                 <td><span class="badge badge-success">{{ inst.instanceType }}</span></td>
-                <td>{{ inst.instanceCount }}</td>
-                <td>{{ inst.scope }}</td>
+                <td><span class="badge badge-pill badge-primary">{{ inst.instanceCount }}</span></td>
                 <td>
-                    <span class="badge badge-{{ inst.timealert }}">{{ inst.endtime }}</span>
+                    <span class="badge badge-{{ inst.timealert }}">{{ inst.endtime|date:"d M Y" }}</span>
                 <td>{{ inst.offeringClass }}</td>
                 <td>{{ inst.offeringType }}</td>
-                <td><span class="badge badge-secondary">{{ inst.fixedPrice }}</span>+<span class="badge badge-secondary">{{ inst.monthlyPrice }}</span> /month</td>
+                <td>{{ inst.tenancy }}</td>
+                <td>{{ inst.scope }}</td>
+                <td><span class="badge badge-secondary">{{ inst.fixedPrice }} + {{ inst.monthlyPrice }} / month</span></td>
+                <td>
+                    {% for ec2 in inst.allocated_ec2.ec2_instances %}
+                    <span data-toggle="tooltip" data-placement="top" title="{{ ec2.type }} ({{ ec2.percent }}%)" class="badge badge-primary">{{ ec2.name }}</span>
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>

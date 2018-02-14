@@ -1,8 +1,11 @@
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+import web.utils as utils
 
 def indexAction(request):
-    return render(request, 'home.html')
+    names = utils.get_customers()
+    context = { 'names': names }
+    return render(request, 'home.html', context)
 
 

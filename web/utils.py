@@ -1,6 +1,7 @@
 import boto3
 from django.contrib import messages
 from .models import Customer
+import aws.definitions as awsdef
 
 
 def check_perm_message(request, cust_name):
@@ -63,3 +64,6 @@ def get_instance_name(inst):
                    return tag['Value']
 
     return None
+
+def instance_is_running(inst):
+    return inst.state['Name'] == awsdef.EC2_RUNNING

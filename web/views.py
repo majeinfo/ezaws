@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from . import utils
 from . import cache
 import aws.pricing as pricing
+import aws.definitions as awsdef
+from . import checks as ck
 from .decorators import user_is_owner, console_defined, aws_defined
 
 std_logger = logging.getLogger('general')
@@ -42,7 +44,7 @@ def get_instances(request, cust_name):
     costs = pricing.Pricing(customer.region)
 
     ec2list = []
-    context = {'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': 0, 'price': 0 }
+    context = {'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': 0, 'price': 0}
 
     ec2 = session.resource('ec2')
     try:
@@ -55,7 +57,8 @@ def get_instances(request, cust_name):
 
     try:
         for inst in ec2.instances.all():
-            if inst.state['Name'] == 'running': context['running_count'] += 1
+            if utils.instance_is_running(inst):
+                context['running_count'] += 1
 
             name = utils.get_instance_name(inst) or ''
 
@@ -65,12 +68,12 @@ def get_instances(request, cust_name):
                             'public_ip': inst.public_ip_address,
                             'is_elastic': _is_elastic_ip(ips, inst.public_ip_address),
                             'private_ip': inst.private_ip_address,
-                            'zone' : inst.placement['AvailabilityZone'],
+                            'zone': inst.placement['AvailabilityZone'],
                             'tags': inst.tags,
                             'name': name,
                             'volume_size': 0})
 
-            if inst.instance_type in pricing.ec2_pricing and inst.state['Name'] == 'running':
+            if inst.instance_type in pricing.ec2_pricing and utils.instance_is_running(inst):
                 context['price'] += int(costs.get_EC2_cost_per_hour(inst.instance_type))
     except Exception as e:
         messages.error(request, e)
@@ -112,7 +115,7 @@ def get_reserved_instances(request, cust_name):
 
     try:
         #rsvlist = client.describe_reserved_instances(Filters=[ {'Name': 'availability-zone', 'Values':[ customer.region ]}] )
-        rsvds = client.describe_reserved_instances(Filters=[ {'Name': 'state', 'Values': ['active']} ])
+        rsvds = client.describe_reserved_instances(Filters=[{'Name': 'state', 'Values': ['active']}])
 
         for rsv in rsvds['ReservedInstances']:
             rsvlist.append({
@@ -120,8 +123,10 @@ def get_reserved_instances(request, cust_name):
                 'productDescription': rsv['ProductDescription'],
                 'fixedPrice': int(rsv['FixedPrice']),
                 'monthlyPrice': int(rsv['RecurringCharges'][0]['Amount'] * 24 * 31),
+                #'monthlyPrice': int(rsv['UsagePrice'] * 24 * 31),
                 'scope': rsv['Scope'],
                 'offeringClass': rsv['OfferingClass'],
+                'tenancy': rsv['InstanceTenancy'],
                 'offeringType': rsv['OfferingType'],
                 'instanceCount': rsv['InstanceCount'],
                 'instanceType': rsv['InstanceType'],
@@ -133,6 +138,17 @@ def get_reserved_instances(request, cust_name):
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)
         return render(request, 'reserved_instances.html', context)
+
+    # Check usage towards running EC2 Instances
+    try:
+        ec2 = session.resource('ec2')
+        rsv_allocation, unused_ec2 = ck.check_reserved_instances(customer, rsvds['ReservedInstances'], list(ec2.instances.all()))
+        for rsv in rsvlist:
+            rsv['allocated_ec2'] = rsv_allocation[rsv['reservedInstancesId']]
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'instances.html', context)
 
     return render(request, 'reserved_instances.html', context)
 
@@ -161,8 +177,8 @@ def get_volumes(request, cust_name):
             context['total_vols'] += 1
             context['total_size'] += vol.size
             context['total_price'] += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
-            v = { 'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A',
-                  'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A' }
+            v = {'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A',
+                 'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A'}
             if not len(vol.attachments):
                 continue
             if len(vol.attachments) and ('InstanceId' in vol.attachments[0]):

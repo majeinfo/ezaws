@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from . import utils
 import aws.params as p
 import aws.pricing as pricing
+import aws.definitions as awsdef
 
 std_logger = logging.getLogger('general')
 
@@ -204,3 +205,150 @@ def get_cw_volume_iops(cw, volume_id, nu_days):
         raise e
 
     return read_ops, write_ops
+
+
+# RI which scope is AZ can be used for Instances in same AZ,
+#   The attributes (tenancy, platform, Availability Zone, instance type, and instance size) must match
+# RI which scope is Region can be used for Instances in any AZ of the Region
+#   If the platform is Linux (no RHEL/SLES) the attributes (tenancy, platform, type) must match and the
+#   size normalization applies
+#   else all the attributes must match except the AZ
+#
+# Returns allocation :
+# {
+#   <ri_instance_id> : {
+#       'max_instance_count': <value>,
+#       'normalized_size': <value>,
+#       'remaining_size': <value>,
+#       'ec2_instances': [
+#           { 'ec2_id': <ec2_instance_id>, 'type': <value>, 'size': <value>, 'percent': <value>, 'name': <value>  },...
+#       ], ...
+#   },....
+# }
+def check_reserved_instances(customer, rsvlist, ec2list):
+    rsv_alloc = {}
+    unused_ec2 = {}     # unused_ec2[inst_id] = percentage_of_unused
+
+    # Init rsv_alloc:
+    for rsv in rsvlist:
+        rsv_id = rsv['ReservedInstancesId']
+        rsv_count = rsv['InstanceCount']
+        rsv_type = rsv['InstanceType']
+        rsv_norm_size = awsdef.instance_normalization[rsv_type.split('.')[1]]
+        rsv_alloc[rsv_id] = {'max_instance_count': rsv_count, 'normalized_size': rsv_norm_size * rsv_count,
+                             'ec2_instances': [], 'remaining_size': rsv_norm_size * rsv_count}
+
+    # Init unused_ec2
+    for ec2 in ec2list:
+        unused_ec2[ec2.id] = 100.0
+
+    # Look for matching EC2 for RI which scope is AZ
+    for rsv in rsvlist:
+        if rsv['Scope'] == 'Region':
+            continue
+        rsv_id = rsv['ReservedInstancesId']
+        rsv_az = rsv['AvailabilityZone']
+        rsv_count = rsv['InstanceCount']
+        rsv_type = rsv['InstanceType']
+        rsv_pf = rsv['ProductDescription']
+        rsv_ten = rsv['InstanceTenancy']
+
+        for ec2 in ec2list:
+            # EC2 already allocated and running
+            if ec2.id not in unused_ec2 or not utils.instance_is_running(ec2):
+                continue
+
+            ec2_az = ec2.placement['AvailabilityZone']
+            ec2_ten = ec2.placement['Tenancy'] if 'Tenancy' in ec2.placement else None
+            ec2_pf = ec2.platform
+            ec2_type = ec2.instance_type
+
+            if rsv_az == ec2_az and rsv_type == ec2_type and rsv_ten == ec2_ten and rsv_pf == ec2_pf:
+                if rsv_count > len(rsv_alloc[rsv_id]['ec2_instances']):
+                    rsv_alloc[rsv_id]['ec2_instances'].append({'ec2_id': ec2.id, 'size': 1, 'type': ec2_type,
+                                                               'percent': 100,
+                                                               'name': utils.get_instance_name(ec2)})
+                    del unused_ec2[ec2.id]
+
+    # Look for matching EC2 with RI which scope is Region but without Flexibility
+    for rsv in rsvlist:
+        if rsv['Scope'] != 'Region':
+            continue
+        rsv_id = rsv['ReservedInstancesId']
+        rsv_count = rsv['InstanceCount']
+        rsv_type = rsv['InstanceType']
+        rsv_pf = rsv['ProductDescription']
+        rsv_ten = rsv['InstanceTenancy']
+
+        if rsv_ten == 'default' and rsv_pf.startswith('Linux/UNIX'):
+            continue
+
+        for ec2 in ec2list:
+            # EC2 already allocated and running
+            if ec2.id not in unused_ec2 or not utils.instance_is_running(ec2):
+                continue
+
+            ec2_ten = ec2.placement['Tenancy'] if 'Tenancy' in ec2.placement else None
+            ec2_pf = ec2.platform
+            ec2_type = ec2.instance_type
+
+            if rsv_type == ec2_type and rsv_ten == ec2_ten and rsv_pf == ec2_pf:
+                if rsv_count > len(rsv_alloc[rsv_id]['ec2_instances']):
+                    rsv_alloc[rsv_id].append({'ec2_id': ec2.id, 'size': 1, 'percent': 100, 'type': ec2_type,
+                                              'name': utils.get_instance_name(ec2)})
+                    del unused_ec2[ec2.id]
+
+    # Look for matching EC2 with RI which scope is Region with Flexibility
+    for rsv in rsvlist:
+        if rsv['Scope'] != 'Region':
+            continue
+        rsv_id = rsv['ReservedInstancesId']
+        rsv_type = rsv['InstanceType']
+        rsv_pf = rsv['ProductDescription']
+        rsv_ten = rsv['InstanceTenancy']
+
+        if rsv_ten != 'default' or not rsv_pf.startswith('Linux/UNIX'):
+            continue
+
+        # For each RI we try to find the "highest" EC2 instance that can fit and if an instance fit
+        # we must loop to find another one
+        while True:
+            best_ec2 = None
+            best_size = 0.0
+            for ec2 in ec2list:
+                # EC2 already allocated and running
+                if ec2.id not in unused_ec2 or not utils.instance_is_running(ec2):
+                    continue
+
+                ec2_ten = ec2.placement['Tenancy'] if 'Tenancy' in ec2.placement else None
+                ec2_pf = ec2.platform
+                ec2_type = ec2.instance_type
+                if rsv_ten != ec2_ten or rsv_pf == ec2_pf:
+                    continue
+
+                # Flexibility applies
+                # instance type must match (t2, m3,...)
+                if rsv_type.split('.')[0] != ec2_type.split('.')[0]:
+                    continue
+                ec2_size = awsdef.instance_normalization[ec2_type.split('.')[1]]
+                if ec2_size <= rsv_alloc[rsv_id]['remaining_size']:
+                    if ec2_size > best_size:
+                        best_size = ec2_size
+                        best_ec2 = ec2
+
+            if best_ec2:
+                rsv_alloc[rsv_id]['ec2_instances'].append({'ec2_id': best_ec2.id, 'size': best_size, 'type': best_ec2.instance_type,
+                                                           'percent': 100, 'name': utils.get_instance_name(best_ec2)})
+                rsv_alloc[rsv_id]['remaining_size'] -= best_size
+                del unused_ec2[best_ec2.id]
+            else:
+                break
+
+    # TODO: try to affect unused_ec2 instances to partially allocated RI
+
+    #print(rsv_alloc)
+    #print(unused_ec2)
+
+    return rsv_alloc, unused_ec2
+
+
