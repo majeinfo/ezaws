@@ -56,6 +56,13 @@ def get_instances(request, cust_name):
         return render(request, 'instances.html', context)
 
     try:
+        amis = list(ec2.images.filter(Owners=['self']))
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'instances.html', context)
+
+    try:
         for inst in ec2.instances.all():
             if utils.instance_is_running(inst):
                 context['running_count'] += 1
@@ -65,6 +72,8 @@ def get_instances(request, cust_name):
             ec2list.append({'instance_id': inst.id,
                             'instance_type': inst.instance_type,
                             'instance_state': inst.state,
+                            'image_id': inst.image_id,
+                            'image_name': _get_ami_name(amis, inst.image_id),
                             'public_ip': inst.public_ip_address,
                             'is_elastic': _is_elastic_ip(ips, inst.public_ip_address),
                             'private_ip': inst.private_ip_address,
@@ -480,6 +489,14 @@ def _get_instances_name_cache(ec2):
         cache[inst.instance_id] = utils.get_instance_name(inst) or inst.instance_id
 
     return cache
+
+
+def _get_ami_name(amis, ami_id):
+    for ami in amis:
+        if ami.id == ami_id:
+            return utils.get_ami_name(ami)
+
+    return 'N/A'
 
 
 # def _get_instance_name_from_id(ec2, inst_id):

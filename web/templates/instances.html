@@ -132,7 +132,7 @@
             <td>{{ inst.private_ip }}</td>
             <td>{{ inst.zone }}</td>
             <td><span class="badge badge-success">{{ inst.instance_type }}</span> <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
-            <td><span class="badge badge-primary">{{ inst.instance_id }}</span></td>
+            <td><span data-toggle="tooltip" data-placement="top" title="{{ inst.image_id }}<br>({{ inst.image_name }})" class="badge badge-primary">{{ inst.instance_id }}</span></td>
             <td>
                 <span id="cpu-{{ inst.instance_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
                 <span id="cpu-tip-{{ inst.instance_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get the CPU load<br>on a non-running Instance"><i class="fas fa-lg fa-info-circle"></i></span>

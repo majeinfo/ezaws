@@ -66,8 +66,19 @@ def get_instance_name(inst):
 
     return None
 
+
 def instance_is_running(inst):
     return inst.state['Name'] == awsdef.EC2_RUNNING
+
+
+def get_ami_name(ami):
+    # Extract the 'name' from tags
+    if ami.tags:
+         for tag in ami.tags:
+              if tag['Key'] == 'Name':
+                   return tag['Value']
+
+    return ami.description
 
 
 def get_ec2_volume_size_price(customer, inst_id, volumes):
