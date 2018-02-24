@@ -410,17 +410,18 @@ def get_elbs(request, cust_name):
 
     # Determine the R53 Domains associated with each ELB
     zones_rsets = cache.get_domains(request, customer)
-    for zone, rsets in zones_rsets.items():
-        #print(zone)
-        for rset in rsets:
-            if rset['Type'] == 'A':
-                if 'AliasTarget' in rset:
-                    #print('AliasTarget:', rset['Name'], rset['Type'], rset['AliasTarget']['DNSName'])
-                    _find_elb(rset['Name'], rset['AliasTarget']['DNSName'], elblist)
-            elif rset['Type'] == 'CNAME' and 'ResourceRecords' in rset:
-                for rr in rset['ResourceRecords']:
-                    #print('CNAME Value:', rset['Name'], rr['Value'])
-                    _find_elb(rset['Name'], rr['Value'], elblist)
+    if zones_rsets:
+        for zone, rsets in zones_rsets.items():
+            #print(zone)
+            for rset in rsets:
+                if rset['Type'] == 'A':
+                    if 'AliasTarget' in rset:
+                        #print('AliasTarget:', rset['Name'], rset['Type'], rset['AliasTarget']['DNSName'])
+                        _find_elb(rset['Name'], rset['AliasTarget']['DNSName'], elblist)
+                elif rset['Type'] == 'CNAME' and 'ResourceRecords' in rset:
+                    for rr in rset['ResourceRecords']:
+                        #print('CNAME Value:', rset['Name'], rr['Value'])
+                        _find_elb(rset['Name'], rr['Value'], elblist)
 
     return render(request, 'elbs.html', context)
 

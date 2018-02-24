@@ -7,8 +7,10 @@ volumes = None
 
 def get_domains(request, customer):
     global zone_rsets
-    if zone_rsets:
+    if zone_rsets is not None:
         return zone_rsets
+
+    zone_rsets = {}
 
     session = utils.get_session(customer)
     route53 = session.client('route53')
