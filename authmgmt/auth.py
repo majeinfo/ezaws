@@ -1,4 +1,5 @@
 import os
+<<<<<<< HEAD
 import json
 import logging
 from django.contrib.auth import authenticate, login, logout
@@ -65,14 +66,29 @@ def signupAction(request):
 
     return render(request, 'subscribe.html', {'form': form})
 
+=======
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponseRedirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
+from .forms import LoginForm
+from web.models import User, Customer
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
 
 def loginAction(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
+<<<<<<< HEAD
         if request.session.test_cookie_worked():
             request.session.delete_test_cookie()
         else:
             return HttpResponse("Please enable cookies and try again.")
+=======
+        # if request.session.test_cookie_worked():
+        #     request.session.delete_test_cookie()
+        # else:
+        #     return HttpResponse("Please enable cookies and try again.")
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
 
         if form.is_valid():
             n = form.cleaned_data['username']
@@ -80,6 +96,7 @@ def loginAction(request):
             user = authenticate(username=n, password=p, request=request)
             if user is not None:
                 login(request, user)
+<<<<<<< HEAD
                 try:
                     messages.info(request, _('Authentication successfull !'))
                     # Set the Customer name in Session
@@ -100,6 +117,17 @@ def loginAction(request):
                 messages.error(request, _('Authentication failed - either your Login or your Password is incorrect'))
         else:
             messages.error(request, _('Invalid Form Values'))
+=======
+
+                # Set the Customer name in Session
+                customers = list(user.customer_set.filter(admins=user.id))
+                if len(customers):
+                    request.session['customer'] = customers[0].name
+                    #print(request.session['customer'])
+
+                return HttpResponseRedirect('/web')
+
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
     else:
         form = LoginForm()
 
@@ -109,6 +137,7 @@ def loginAction(request):
 
 def logoutAction(request):
     logout(request)
+<<<<<<< HEAD
     return HttpResponseRedirect('/')
 
 
@@ -192,16 +221,24 @@ def checkKeyAction(request, cust_name):
     ]
 
     return render(request, 'check_key.html', context = {'current': cust_name, 'names': names, 'perms': perms })
+=======
+    return HttpResponseRedirect('/web')
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
 
 
 @csrf_exempt
 def hookDeployAction(request):
     # Should be in another Controller - normally called by DockerHub as a hook
+<<<<<<< HEAD
     json_data = json.loads(str(request.body))
     tag = json_data['push_data']['tag']
 
     #os.system('sudo -u ezaws /home/ezaws/restart.sh')
     os.system('/home/ezaws/restart.sh ' + tag)
+=======
+    #os.system('sudo -u ezaws /home/ezaws/restart.sh')
+    os.system('/home/ezaws/restart.sh')
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
     return HttpResponse("OK")
 
 

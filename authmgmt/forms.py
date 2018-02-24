@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from django.utils.translation import ugettext as _
 from captcha.fields import CaptchaField
 import pytz
@@ -26,3 +27,10 @@ class ProfileForm(forms.Form):
     region = forms.ChoiceField(choices=map(lambda x: (x, x), available_regions), label=_('Default AWS Region'))
     timezone = forms.ChoiceField(choices=map(lambda x: (x, x), pytz.common_timezones), label=_('Your Timezone'))
 
+=======
+from django import forms
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=75, label='Votre identifiant')
+    password = forms.CharField(widget=forms.PasswordInput, label='Mot de passe')
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8

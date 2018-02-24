@@ -26,7 +26,6 @@ def user_is_owner(func):
         except:
             raise PermissionDenied
 
-        #print(admin.username, request.user)
         if str(admin.username) == str(request.user):
             return func(request, *args, **kwargs)
 
@@ -78,6 +77,5 @@ def aws_defined(func):
     _wrap.__doc__ = func.__doc__
     _wrap.__name__ = func.__name__
     return _wrap
-
 
 

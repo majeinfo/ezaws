@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 from django.urls import path
+=======
+from django.conf.urls import url
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
 from django.contrib.auth import views as auth_views
 from . import auth
 
 urlpatterns = [
     #url(r'^login', auth_views.LoginView.as_view(template_name='login.html'), name='auth_login'),
+<<<<<<< HEAD
     path('login', auth.loginAction, name='auth_login'),
     path('logout', auth.logoutAction, name='auth_logout'),
     path('signup', auth.signupAction, name='auth_signup'),
@@ -17,4 +22,9 @@ urlpatterns = [
     path('check_key/<cust_name>', auth.checkKeyAction, name='check_key'),
     path('hook_deploy', auth.hookDeployAction, name='hook_deploy'),
     path('', auth.indexAction, name='auth_index'),
+=======
+    url(r'^login', auth.loginAction, name='auth_login'),
+    url(r'^logout', auth.logoutAction, name='auth_logout'),
+    url(r'^hook_deploy', auth.hookDeployAction, name='hook_deploy'),
+>>>>>>> e86af261ef096ba887135da1d22bc86847fce2f8
 ]

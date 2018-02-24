@@ -142,7 +142,7 @@ def get_elb_reqcount(request, cust_name, elb_type, elb_name):
             Period=86400,
             Statistics=['Sum']
         )
-        print(results)
+
         datapoints = results['Datapoints']
         if datapoints and len(datapoints):
             req_count = datapoints[0]['Sum']
@@ -235,5 +235,4 @@ def get_vol_ops(request, cust_name, volume_id):
         read_ops = write_ops = 'Err'
 
     return HttpResponse(json.dumps({ 'read_ops': read_ops, 'write_ops': write_ops }), content_type='application/json')
-
 

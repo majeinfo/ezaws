@@ -490,7 +490,6 @@ def _get_instances_name_cache(ec2):
 
     return cache
 
-
 def _get_ami_name(amis, ami_id):
     for ami in amis:
         if ami.id == ami_id:
@@ -498,11 +497,4 @@ def _get_ami_name(amis, ami_id):
 
     return 'N/A'
 
-
-# def _get_instance_name_from_id(ec2, inst_id):
-#     for inst in ec2.instances.all():
-#         if inst.instance_id == inst_id:
-#             return utils.get_instance_name(inst)
-#
-#     return None
 

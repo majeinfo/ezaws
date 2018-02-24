@@ -92,3 +92,4 @@ def get_ec2_volume_size_price(customer, inst_id, volumes):
             total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
 
     return total_vol_size, total_price
+
