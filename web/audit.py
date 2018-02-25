@@ -5,14 +5,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from . import utils
 from .models import Customer
-from .decorators import user_is_owner, aws_defined
+from .decorators import user_is_owner, aws_creds_defined
 from . import checks as ck
 import aws.params as p
 from . import cache
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def auditAction(request, cust_name):
     names = _get_customers()
     customer = _get_customer(cust_name)
@@ -22,7 +22,7 @@ def auditAction(request, cust_name):
     ec2 = session.resource('ec2')
     client = utils.get_client(customer, 'ec2')
 
-    # Initialize Reponse Context
+    # Initialize Response Context
     context = {
         'current': cust_name, 'names': names,
         'total_vols': 'N/A', 'orphan_vols': [], 'total_vols_size': 'N/A', 'vol_sizes': 'N/A', 'total_vols_price': 'N/A',

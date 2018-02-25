@@ -12,7 +12,7 @@ from . import cache
 import aws.pricing as pricing
 import aws.definitions as awsdef
 from . import checks as ck
-from .decorators import user_is_owner, console_defined, aws_defined
+from .decorators import user_is_owner, console_defined, aws_creds_defined
 
 std_logger = logging.getLogger('general')
 
@@ -35,7 +35,7 @@ def goto_console(request, cust_name):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_instances(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -110,7 +110,7 @@ def get_instances(request, cust_name):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_reserved_instances(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -164,7 +164,7 @@ def get_reserved_instances(request, cust_name):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_volumes(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -210,7 +210,7 @@ def get_volumes(request, cust_name):
 # TODO: use the Paginator with the Snapshots
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_snapshots(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -246,7 +246,7 @@ def get_snapshots(request, cust_name):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def check_snapshots(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -308,7 +308,7 @@ def check_snapshots(request, cust_name):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_elbs(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
@@ -438,7 +438,7 @@ def _find_elb(rr_name, value, elblist):
 
 @login_required
 @user_is_owner
-@aws_defined
+@aws_creds_defined
 def get_elasticache(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)

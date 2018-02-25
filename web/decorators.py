@@ -58,7 +58,7 @@ def console_defined(func):
 
 
 
-def aws_defined(func):
+def aws_creds_defined(func):
     def _wrap(request, *args, **kwargs):
         # Customer must have defined his AWS Credentials
         if 'cust_name' not in request.resolver_match.kwargs:
