@@ -57,11 +57,11 @@ def get_elasticache(customer):
     return session.client('elasticache')
 
 
-def get_instance_name(inst):
+def get_instance_name(inst, tag_name='Name'):
     # Extract the 'name' from tags
     if inst.tags:
          for tag in inst.tags:
-              if tag['Key'] == 'Name':
+              if tag['Key'] == tag_name:
                    return tag['Value']
 
     return None
@@ -71,12 +71,14 @@ def instance_is_running(inst):
     return inst.state['Name'] == awsdef.EC2_RUNNING
 
 
-def get_ami_name(ami):
+def get_ami_name(ami, tag_name='Name'):
     # Extract the 'name' from tags
     if ami.tags:
          for tag in ami.tags:
-              if tag['Key'] == 'Name':
+              if tag['Key'] == tag_name:
                    return tag['Value']
+    if ami.name:
+        return ami.name
 
     return ami.description
 

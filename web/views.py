@@ -67,13 +67,13 @@ def get_instances(request, cust_name):
             if utils.instance_is_running(inst):
                 context['running_count'] += 1
 
-            name = utils.get_instance_name(inst) or ''
+            name = utils.get_instance_name(inst, customer.aws_resource_tag_name) or ''
 
             ec2list.append({'instance_id': inst.id,
                             'instance_type': inst.instance_type,
                             'instance_state': inst.state,
                             'image_id': inst.image_id,
-                            'image_name': _get_ami_name(amis, inst.image_id),
+                            'image_name': _get_ami_name(amis, inst.image_id, customer.aws_resource_tag_name),
                             'public_ip': inst.public_ip_address,
                             'is_elastic': _is_elastic_ip(ips, inst.public_ip_address),
                             'private_ip': inst.private_ip_address,
@@ -180,7 +180,7 @@ def get_volumes(request, cust_name):
                 'total_price': 0, 'total_size': 0 }
 
     try:
-        inst_name_cache = _get_instances_name_cache(ec2)
+        inst_name_cache = _get_instances_name_cache(ec2, customer.aws_resource_tag_name)
         volumes = ec2.volumes.all()
         for vol in volumes:
             context['total_vols'] += 1
@@ -274,7 +274,7 @@ def check_snapshots(request, cust_name):
     try:
         for inst in ec2.instances.all():
             ec2vol[inst.id] = { 'all': [] }
-            name = utils.get_instance_name(inst) or ''
+            name = utils.get_instance_name(inst, customer.aws_resource_tag_name) or ''
 
             volumes = inst.volumes.all()
             volume_snapped = volume_count = 0
@@ -329,7 +329,7 @@ def get_elbs(request, cust_name):
     session = utils.get_session(customer)
     ec2 = session.resource('ec2')   # to get the instance Name from instance ID
     try:
-        inst_name_cache = _get_instances_name_cache(ec2)
+        inst_name_cache = _get_instances_name_cache(ec2, customer.aws_resource_tag_name)
     except Exception as e:
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)
@@ -483,18 +483,18 @@ def _is_elastic_ip(ips, public_ip):
     return False
 
 
-def _get_instances_name_cache(ec2):
+def _get_instances_name_cache(ec2, tag_name='NAME'):
     '''Returns a dict with inst_id as a key and instance Name as value'''
     cache = collections.defaultdict(str)
     for inst in ec2.instances.all():
-        cache[inst.instance_id] = utils.get_instance_name(inst) or inst.instance_id
+        cache[inst.instance_id] = utils.get_instance_name(inst, tag_name) or inst.instance_id
 
     return cache
 
-def _get_ami_name(amis, ami_id):
+def _get_ami_name(amis, ami_id, tag_name='NAME'):
     for ami in amis:
         if ami.id == ami_id:
-            return utils.get_ami_name(ami)
+            return utils.get_ami_name(ami, tag_name)
 
     return 'N/A'
 

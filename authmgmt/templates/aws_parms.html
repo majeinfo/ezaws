@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load bootstrap4 %}
+{% block title %}{% trans "AWS Parameters Settings Page" %}{% endblock %}
+{% block content %}
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    {{ form.non_field_errors }}
+                    <div class="card">
+                        <div class="card-header">
+                            <legend>AWS Parameters Settings :</legend>
+                        </div>
+                        <div class="card-body">
+                            <form action="{% url 'aws_parms' %}" method="post" class="form-horizontal">
+                                {% csrf_token %}
+                                <div class="form-group row">
+                                    <label for="console_url" class="col-sm-4 control-label">{{ form.aws_resource_tag_name.label_tag }}</label>
+                                    <div class="col-sm-8">
+                                        {% if form.aws_resource_tag_name.errors %}
+                                        <input type="text" class="form-control is-invalid" name="aws_resource_tag_name" placeholder="" value="{{ form.aws_resource_tag_name.value }}">
+                                        {% else %}
+                                        <input type="text" class="form-control" name="aws_resource_tag_name" placeholder="" value="{{ form.aws_resource_tag_name.value }}">
+                                        {% endif %}
+                                        <div class="invalid-feedback">{{ form.aws_resource_tag_name.errors }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-4 col-form-label"></label>
+                                    <div class="col-sm-offset-2 col-sm-4">
+                                        <button type="submit" class="btn btn-primary" name="submit" placeholder="Save">Save</button>&nbsp;
+                                        <button type="submit" class="btn btn-outline-primary" name="cancel" placeholder="Cancel">Cancel</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="next" value="{{ next }}" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+{% endblock %}
+

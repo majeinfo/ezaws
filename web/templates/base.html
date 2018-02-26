@@ -57,7 +57,10 @@
                 <div class="dropdown-menu dropdown-menu-right">
                     {% if not user.is_superuser %}
                     <a class="dropdown-item" href="{% url 'auth_profile' %}"><i class="fa fa-user fa-fw"></i> User Profile</a>
-                    {% if request.session.customer %}<a class="dropdown-item" href="{% url 'check_key' request.session.customer %}"><i class="fa fa-key fa-fw"></i> Check AWS Keys</a>{% endif %}
+                    <a class="dropdown-item" href="{% url 'aws_parms' %}"><i class="fa fa-key fa-fw"></i> AWS Parameters</a>
+                    {% if request.session.customer %}
+                    <a class="dropdown-item" href="{% url 'check_key' request.session.customer %}"><i class="fa fa-key fa-fw"></i> Check AWS Keys</a>
+                    {% endif %}
                     <a class="dropdown-item" href="{% url 'change_password' %}"><i class="fa fa-unlock fa-fw"></i>Change Password</a>
                     <div class="dropdown-divider"></div>
                     {% endif %}

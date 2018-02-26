@@ -8,6 +8,7 @@ urlpatterns = [
     path('logout', auth.logoutAction, name='auth_logout'),
     path('signup', auth.signupAction, name='auth_signup'),
     path('profile', auth.editProfileAction, name='auth_profile'),
+    path('aws_parms', auth.editAWSParmsAction, name='aws_parms'),
     path('change_password', auth.changePasswordAction, name='change_password'),
     path('password_reset/done', auth_views.password_reset_done, { 'template_name': 'password_reset_done.html'}, name='password_reset_done'),
     path('password_reset', auth_views.password_reset, { 'template_name': 'password_reset_form.html',

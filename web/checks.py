@@ -42,7 +42,7 @@ def check_orphan_amis(customer, amis, instances):
         #print(ami.id)
         orphans[ami.id] = True
         devices[ami.id] = ami.block_device_mappings
-        ami_names[ami.id] = utils.get_ami_name(ami)
+        ami_names[ami.id] = utils.get_ami_name(ami, customer.aws_resource_tag_name)
 
     for inst in instances:
         if inst.image_id in orphans:
@@ -108,7 +108,7 @@ def check_stopped_instances(customer, instances, volumes):
             #         total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
             #         #break
 
-            name = utils.get_instance_name(inst)
+            name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
             stopped_inst[inst.instance_id] = { 'total_vol_size': total_vol_size, 'name': name }
             total_size += total_vol_size
 
@@ -124,7 +124,7 @@ def check_long_time_stopped_instances(customer, instances):
             past = now - timedelta(days=p.parm_unused_instances_nu_days)
             print(past)
             if inst.launch_time < past:
-                name = utils.get_instance_name(inst)
+                name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
                 stopped_inst[inst.instance_id] = { 'days': (now - inst.launch_time).days, 'name': name }
 
     return { 'long_time_stopped_inst': stopped_inst }
@@ -152,7 +152,7 @@ def check_underused_volume(customer, volumes, instances):
             inst_id = vol.attachments[0]['InstanceId']
             for inst in instances:
                 if inst_id == inst.instance_id:
-                    inst_name = utils.get_instance_name(inst)
+                    inst_name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
                     if inst_name is None:
                         inst_name = inst.instance_id
                     break
@@ -253,7 +253,7 @@ def check_reserved_instances(customer, rsvlist, ec2list):
         if not utils.instance_is_running(ec2):
             continue
         ec2_type = ec2.instance_type
-        unused_ec2[ec2.id] = {'inst': ec2, 'name': utils.get_instance_name(ec2),
+        unused_ec2[ec2.id] = {'inst': ec2, 'name': utils.get_instance_name(ec2, customer.aws_resource_tag_name),
                               'value': awsdef.instance_normalization[ec2_type.split('.')[1]],
                               'days': (now - ec2.launch_time).days}
 
@@ -282,7 +282,7 @@ def check_reserved_instances(customer, rsvlist, ec2list):
                 if rsv_count > len(rsv_alloc[rsv_id]['ec2_instances']):
                     rsv_alloc[rsv_id]['ec2_instances'].append({'ec2_id': ec2.id, 'size': 1, 'type': ec2_type,
                                                                'percent': 100,
-                                                               'name': utils.get_instance_name(ec2)})
+                                                               'name': utils.get_instance_name(ec2, customer.aws_resource_tag_name)})
                     del unused_ec2[ec2.id]
 
     # Look for matching EC2 with RI which scope is Region but without Flexibility
@@ -310,7 +310,7 @@ def check_reserved_instances(customer, rsvlist, ec2list):
             if rsv_type == ec2_type and rsv_ten == ec2_ten and rsv_pf == ec2_pf:
                 if rsv_count > len(rsv_alloc[rsv_id]['ec2_instances']):
                     rsv_alloc[rsv_id].append({'ec2_id': ec2.id, 'size': 1, 'percent': 100, 'type': ec2_type,
-                                              'name': utils.get_instance_name(ec2)})
+                                              'name': utils.get_instance_name(ec2, customer.aws_resource_tag_name)})
                     del unused_ec2[ec2.id]
 
     # Look for matching EC2 with RI which scope is Region with Flexibility
@@ -353,7 +353,7 @@ def check_reserved_instances(customer, rsvlist, ec2list):
 
             if best_ec2:
                 rsv_alloc[rsv_id]['ec2_instances'].append({'ec2_id': best_ec2.id, 'size': best_size, 'type': best_ec2.instance_type,
-                                                           'percent': 100, 'name': utils.get_instance_name(best_ec2)})
+                                                           'percent': 100, 'name': utils.get_instance_name(best_ec2, customer.aws_resource_tag_name)})
                 rsv_alloc[rsv_id]['remaining_size'] -= best_size
                 del unused_ec2[best_ec2.id]
             else:

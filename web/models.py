@@ -10,6 +10,7 @@ class Customer(models.Model):
     timezone = models.CharField(max_length=32, default='UTC')
     console_url = models.CharField(max_length=200, default='')
     admins = models.ManyToManyField(User)
+    aws_resource_tag_name = models.CharField(max_length=32, default='NAME')
 
     class Meta:
         ordering = [ "name" ]

@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from .forms import LoginForm, SubscribeForm, ProfileForm
+from .forms import LoginForm, SubscribeForm, ProfileForm, AWSParmsForm
 from web.models import User, Customer
 from web.utils import get_customer, get_customers
 from web.decorators import user_is_owner, aws_creds_defined
@@ -168,7 +168,34 @@ def changePasswordAction(request):
 
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'change_password.html', { 'form': form })
+    return render(request, 'change_password.html', {'form': form})
+
+
+@login_required
+def editAWSParmsAction(request):
+    customer = get_customer(request.user.username)
+
+    if request.method == 'POST':
+        if 'cancel' in request.POST:
+            return HttpResponseRedirect('/web')
+
+        form = AWSParmsForm(request.POST)
+        if form.is_valid():
+            customer.aws_resource_tag_name = form.cleaned_data['aws_resource_tag_name']
+            try:
+                customer.save()
+                messages.info(request, _("Your settings has been successfully updated !"))
+            except Exception as e:
+                std_logger.error("Error while updating Customer profile: ", e)
+                messages.error(request, _("Sorry, an error has been detected while updating your settings !"))
+    else:
+        form = AWSParmsForm(
+            initial={
+                'aws_resource_tag_name': customer.aws_resource_tag_name,
+            }
+        )
+
+    return render(request, 'aws_parms.html', {'form': form})
 
 
 @login_required
@@ -176,7 +203,6 @@ def changePasswordAction(request):
 @aws_creds_defined
 def checkKeyAction(request, cust_name):
     names = get_customers()
-
 
     perms = [
         { 'perm': 'ec2_describe_addresses', 'iam_perm': 'ec2:DescribeAddresses', 'desc': 'List Elastic IP' },
