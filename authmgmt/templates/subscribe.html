@@ -30,7 +30,7 @@
                                 <div class="form-group row">
                                     <label for="password" class="col-sm-5 control-label">{{ form.password.label_tag }}</label>
                                     <div class="col-sm-6">
-                                        {% if form.username.errors %}
+                                        {% if form.password.errors %}
                                         <input type="password" class="form-control is-invalid" name="password" placeholder="password" value="{{ form.password.value }}">
                                         {% else %}
                                         <input type="password" class="form-control" name="password" placeholder="password" value="{{ form.password.value }}">
@@ -41,7 +41,7 @@
                                 <div class="form-group row">
                                     <label for="password2" class="col-sm-5 control-label">{{ form.password2.label_tag }}</label>
                                     <div class="col-sm-6">
-                                        {% if form.username.errors %}
+                                        {% if form.password2.errors %}
                                         <input type="password" class="form-control is-invalid" name="password2" placeholder="password" value="{{ form.password2.value }}">
                                         {% else %}
                                         <input type="password" class="form-control" name="password2" placeholder="password" value="{{ form.password2.value }}">
@@ -52,7 +52,7 @@
                                 <div class="form-group row">
                                     <label for="email" class="col-sm-5 control-label">{{ form.email.label_tag }}</label>
                                     <div class="col-sm-6">
-                                        {% if form.username.errors %}
+                                        {% if form.email.errors %}
                                         <input type="text" class="form-control is-invalid" name="email" placeholder="me@company.com" value="{{ form.email.value }}">
                                         {% else %}
                                         <input type="text" class="form-control" name="email" placeholder="me@company.com" value="{{ form.email.value }}">
