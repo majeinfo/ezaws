@@ -37,6 +37,8 @@ def signupAction(request):
             # passwords must match
             if p != p2:
                 messages.error(request, _('Passwords mismatch, please enter your Password again'))
+                return render(request, 'subscribe.html', {'form': form})
+
             try:
                 user = User.objects.get(username=n)
                 messages.error(request, _('This Username already exists, please choose another one !'))

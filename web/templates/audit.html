@@ -44,11 +44,9 @@
         <td><span class="badge badge-success">{{ total_amis }}</span></td>
         <td>{% if orphan_amis|length %}<span class="badge badge-danger">{% else %}<span class="badge badge-success">{% endif %}{{ orphan_amis|length }}</span></td>
         <td>
-            {% for amid in orphan_amis %}
-                <span class="badge badge-primary">{{ amid }}</span>&nbsp;
-                    {% for key, value in ami_sizes.items %}
-                        {% if key == amid %}<span class="badge badge-info">{{ value }} GiB</span>{% endif %}
-                    {% endfor %}&nbsp;
+            {% for key, value in orphan_amis.items %}
+                <span data-toggle="tooltip" data-placement="top" title="{{ value.name }}" class="badge badge-primary">{{ key}}</span>&nbsp;
+                <span class="badge badge-info">{{ value.size }} GiB</span>
             {% endfor %}
         </td>
         <td>{% if total_amis_size %}

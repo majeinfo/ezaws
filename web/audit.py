@@ -26,7 +26,7 @@ def auditAction(request, cust_name):
     context = {
         'current': cust_name, 'names': names,
         'total_vols': 'N/A', 'orphan_vols': [], 'total_vols_size': 'N/A', 'vol_sizes': 'N/A', 'total_vols_price': 'N/A',
-        'total_amis': 'N/A', 'orphan_amis': [], 'total_amis_size': 'N/A', 'ami_sizes': 'N/A', 'total_amis_price': 'N/A',
+        'total_amis': 'N/A', 'orphan_amis': {}, 'total_amis_size': 'N/A', 'total_amis_price': 'N/A',
         'total_eips': 'N/A', 'orphan_eips': [], 'total_eips_price': 'N/A',
         'total_instances': 'N/A', 'stopped_instances': [], 'total_instances_price': 'N/A', 'total_instances_size': 'N/A',
         'orphan_target_groups': [],
@@ -73,9 +73,8 @@ def auditAction(request, cust_name):
         amis = list(ec2.images.filter(Owners=['self']))
         result = ck.check_orphan_amis(customer, amis, instances)
         #print(result)
-        context['orphan_amis'] = result['orphans']
+        context['orphan_amis'] = result['ami_attrs']
         context['total_amis'] = len(amis)
-        context['ami_sizes'] = result['ami_sizes']
         context['total_amis_size'] = result['total_size']
         context['total_amis_price'] = result['total_price']
     except Exception as e:

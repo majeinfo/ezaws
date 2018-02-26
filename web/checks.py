@@ -35,11 +35,14 @@ def check_orphan_amis(customer, amis, instances):
     devices = {}
     total_price = 0
     total_size = 0  # in GiB
+    ami_attrs = {}
+    ami_names = {}
 
     for ami in amis:
         #print(ami.id)
         orphans[ami.id] = True
         devices[ami.id] = ami.block_device_mappings
+        ami_names[ami.id] = utils.get_ami_name(ami)
 
     for inst in instances:
         if inst.image_id in orphans:
@@ -54,11 +57,15 @@ def check_orphan_amis(customer, amis, instances):
             if 'Ebs' not in vol:
                 continue
             vol_size = vol['Ebs']['VolumeSize']
+            ami_attrs[ami_id] = {'name': ami_names[ami_id]}
             ami_sizes[ami_id] += vol_size
             total_size += vol_size
             total_price += costs.get_EBS_cost_per_month(vol_size, 'snapshot', 0)
 
-    return { 'orphans': orphans.keys(), 'total_size': total_size, 'ami_sizes': dict(ami_sizes), 'total_price': total_price }
+        ami_attrs[ami_id]['size'] = ami_sizes[ami_id]
+
+    return { 'orphans': orphans.keys(), 'total_size': total_size, 'ami_sizes': dict(ami_sizes),
+             'total_price': total_price, 'ami_attrs': ami_attrs }
 
 
 def check_orphan_eips(customer, eips):
