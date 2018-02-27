@@ -1,5 +1,6 @@
 import boto3
 from datetime import datetime, timedelta
+from operator import itemgetter
 from django.utils import timezone
 import collections
 import logging
@@ -365,5 +366,119 @@ def check_reserved_instances(customer, rsvlist, ec2list):
     #print(unused_ec2)
 
     return rsv_alloc, unused_ec2
+
+
+def check_instances_usage(customer, instances):
+    cloudwatch = utils.get_cloudwatch(customer)
+    buckets = {}
+    for inst in instances:
+        if inst.state['Name'] == awsdef.EC2_RUNNING:
+            cpu, netin, netout = check_instance_usage(cloudwatch, inst)
+            if cpu is None or netin is None or netout is None:
+                continue
+            bucket = {
+                'name': utils.get_instance_name(inst, customer.aws_resource_tag_name),
+                'weekdays': [],
+                'hours': [],
+            }
+            for a, b, c in zip(cpu['weekdays'], netin['weekdays'], netout['weekdays']):
+                bucket['weekdays'].append(a + b + c)
+
+            for a, b, c in zip(cpu['hours'], netin['hours'], netout['hours']):
+                bucket['hours'].append(a + b + c)
+
+            buckets[inst.id] = bucket
+
+    return buckets
+
+
+def check_instance_usage(cw, instance):
+    now = datetime.utcnow()
+    now = datetime(now.year, now.month, now.day, now.hour)
+    past = now - timedelta(minutes=60*24*30)
+    future = now + timedelta(minutes=60)
+
+    results = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='CPUUtilization',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                StartTime=past,
+                EndTime=future,
+                Period=60*60,   # in seconds
+                Statistics=['Average']
+    )
+    cpu_buckets = _put_in_buckets(results, 5)
+
+    '''
+    Disk Read/Write must apply on EBS
+    results = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='DiskReadBytes',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                StartTime=past,
+                EndTime=future,
+                Period=60*60,   # in seconds
+                Statistics=['Average']
+    )
+    readbytes_buckets = _put_in_buckets(results, 10)
+
+    results = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='DiskWriteBytes',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                StartTime=past,
+                EndTime=future,
+                Period=60*60,   # in seconds
+                Statistics=['Average']
+    )
+    writebytes_buckets = _put_in_buckets(results, 10)
+    '''
+
+    results = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='NetworkIn',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                StartTime=past,
+                EndTime=future,
+                Period=60*60,   # in seconds
+                Statistics=['Average']
+    )
+    netin_buckets = _put_in_buckets(results, 100000)
+
+    results = cw.get_metric_statistics(
+                Namespace='AWS/EC2',
+                MetricName='NetworkOut',
+                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                StartTime=past,
+                EndTime=future,
+                Period=60*60,   # in seconds
+                Statistics=['Average']
+    )
+    netout_buckets = _put_in_buckets(results, 100000)
+
+    return cpu_buckets, netin_buckets, netout_buckets
+
+
+def _put_in_buckets(results, threshold):
+    datapoints = results['Datapoints']
+    if not datapoints or not len(datapoints):
+        return None
+
+    datapoints = sorted(datapoints, key=itemgetter('Timestamp'))
+
+    buckets = {
+        'weekdays' : [ 0 ] * 7,  # 0=monday
+        'hours': [ 0 ] * 24,
+    }
+
+    for point in datapoints:
+        avg = point['Average']
+        if avg > threshold:
+            t = point['Timestamp']
+            wd = t.weekday()
+            buckets['weekdays'][wd] += 1
+            buckets['hours'][t.hour] += 1
+
+    return buckets
 
 

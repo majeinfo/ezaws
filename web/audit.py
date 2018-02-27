@@ -33,6 +33,7 @@ def auditAction(request, cust_name):
         'underused_volumes': [], 'underused_size': 'N/A', 'underused_price': 'N/A',
         'long_time_stopped_instances': [], 'long_time_stopped_inst_vol_size': 0, 'long_time_stopped_inst_vol_price': 0,
         'total_ri': 0, 'ri_not_filled': {}, 'ec2_without_ri': [],
+        'instances_usage': [],
     }
 
     # Get instances
@@ -154,7 +155,19 @@ def auditAction(request, cust_name):
         utils.check_perm_message(request, cust_name)
         return render(request, 'audit.html', context)
 
+    # Analyse Instances Usage
+    buckets = ck.check_instances_usage(customer, instances)
+    context['instances_usage'] = buckets
+
     return render(request, 'audit.html', context)
+
+
+def _add_values(*args):
+    values = []
+    for t in zip(*args):
+        values.append(sum(*t))
+
+    return values
 
 
 def _get_customers():

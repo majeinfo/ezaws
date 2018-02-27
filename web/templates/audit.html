@@ -224,6 +224,64 @@
     </tbody>
 </table>
 
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">EC2 Instances Usage (experimental)</button>
+</h2>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <td>Name</td><td>Mon</td><td>Tue</td><td>Wed</td><td>Thu</td><td>Fri</td><td>Sat</td><td>Sun</td>
+        </tr>
+    </thead>
+    <tbody class="table-striped">
+    {% for key, value in instances_usage.items %}
+    <tr>
+        <td><span class="btn btn-info">{{ value.name }}</span></td>
+        {% for v in value.weekdays %}
+        <td>
+            {% if v <= 3 %}
+                <span class="badge badge-danger">{{ v }}</span>
+            {% elif v <= 10 %}
+                <span class="badge badge-warning">{{ v }}</span>
+            {% else %}
+                <span class="badge badge-success">{{ v }}</span>
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <td>Name</td>
+            <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td>
+            <td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td>
+        </tr>
+    </thead>
+    <tbody class="table-striped">
+    {% for key, value in instances_usage.items %}
+    <tr>
+        <td><span class="btn btn-info">{{ value.name }}</span></td>
+        {% for v in value.hours %}
+        <td>
+            {% if v <= 3 %}
+                <span class="badge badge-danger">{{ v }}</span>
+            {% elif v <= 10 %}
+                <span class="badge badge-warning">{{ v }}</span>
+            {% else %}
+                <span class="badge badge-success">{{ v }}</span>
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
   </div>
 </div>
 {% endblock %}
