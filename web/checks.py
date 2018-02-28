@@ -1,12 +1,12 @@
-import boto3
-from datetime import datetime, timedelta
+import multiprocessing as mp
 from operator import itemgetter
 from django.utils import timezone
 import collections
 import logging
 from datetime import datetime, timedelta
 from . import utils
-import aws.params as p
+from . import log
+import aws.params as params
 import aws.pricing as pricing
 import aws.definitions as awsdef
 
@@ -14,6 +14,7 @@ std_logger = logging.getLogger('general')
 
 
 def check_orphan_volumes(customer, volumes):
+    log.log_time('-> check_orphan_volumes')
     costs = pricing.Pricing(customer.region)
     total_size = 0
     total_price = 0
@@ -27,10 +28,12 @@ def check_orphan_volumes(customer, volumes):
             total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
             vol_sizes[vol.id] = vol.size
 
+    log.log_time('<- check_orphan_volumes')
     return { 'orphans': orphans, 'total_size': total_size, 'vol_sizes': vol_sizes, 'total_price': total_price }
 
 
 def check_orphan_amis(customer, amis, instances):
+    log.log_time('-> check_orphan_amis')
     costs = pricing.Pricing(customer.region)
     orphans = {}
     devices = {}
@@ -65,11 +68,13 @@ def check_orphan_amis(customer, amis, instances):
 
         ami_attrs[ami_id]['size'] = ami_sizes[ami_id]
 
+    log.log_time('<- check_orphan_amis')
     return { 'orphans': orphans.keys(), 'total_size': total_size, 'ami_sizes': dict(ami_sizes),
              'total_price': total_price, 'ami_attrs': ami_attrs }
 
 
 def check_orphan_eips(customer, eips):
+    log.log_time('-> check_orphan_eips')
     costs = pricing.Pricing(customer.region)
     orphans = []
     total_price = 0
@@ -79,20 +84,25 @@ def check_orphan_eips(customer, eips):
             orphans.append(eip['PublicIp'])
             total_price += costs.get_EIP_cost_per_month()
 
+    log.log_time('<- check_orphan_eips')
     return { 'orphans': orphans, 'total_price': total_price }
 
 
 def check_orphan_target_groups(customer, target_groups):
+    log.log_time('-> check_orphan_target_groups')
+
     orphans = []
 
     for group in target_groups['TargetGroups']:
         if not len(group['LoadBalancerArns']):
             orphans.append(group['TargetGroupName'])
 
+    log.log_time('<- check_orphan_target_groups')
     return { 'orphans': orphans }
 
 
 def check_stopped_instances(customer, instances, volumes):
+    log.log_time('-> check_stopped_instances')
     costs = pricing.Pricing(customer.region)
     stopped_inst = {}
     total_size = 0
@@ -113,36 +123,40 @@ def check_stopped_instances(customer, instances, volumes):
             stopped_inst[inst.instance_id] = { 'total_vol_size': total_vol_size, 'name': name }
             total_size += total_vol_size
 
+    log.log_time('<- check_stopped_instances')
     return { 'stopped_inst': stopped_inst, 'total_size': total_size, 'total_price': total_price }
 
 
 def check_long_time_stopped_instances(customer, instances):
+    log.log_time('-> check_long_time_stopped_instances')
     stopped_inst = {}
     for inst in instances:
         if inst.state['Name'] == 'stopped':
             #print(inst.launch_time)
             now = timezone.now()
-            past = now - timedelta(days=p.parm_unused_instances_nu_days)
+            past = now - timedelta(days=params.parm_unused_instances_nu_days)
             print(past)
             if inst.launch_time < past:
                 name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
                 stopped_inst[inst.instance_id] = { 'days': (now - inst.launch_time).days, 'name': name }
 
+    log.log_time('<- check_long_time_stopped_instances')
     return { 'long_time_stopped_inst': stopped_inst }
 
 
 def check_underused_volume(customer, volumes, instances):
+    log.log_time('-> check_underused_volume')
     costs = pricing.Pricing(customer.region)
     cloudwatch = utils.get_cloudwatch(customer)
-    nu_days = p.parm_unused_volumes_nu_days
+    nu_days = params.parm_unused_volumes_nu_days
     underused_volumes = {}
     underused_size = 0
     underused_price = 0
     for vol in volumes:
         read_ops, write_ops = get_cw_volume_iops(cloudwatch, vol.id, nu_days)
         if (read_ops is not None) and (write_ops is not None) and \
-                (read_ops < p.parm_unused_volumes_min_read_ops * nu_days) and \
-                (write_ops < p.parm_unused_volumes_min_write_ops * nu_days):
+                (read_ops < params.parm_unused_volumes_min_read_ops * nu_days) and \
+                (write_ops < params.parm_unused_volumes_min_write_ops * nu_days):
             underused_volumes[vol.id] = {}
             underused_size += vol.size
             underused_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
@@ -161,6 +175,7 @@ def check_underused_volume(customer, volumes, instances):
             underused_volumes[vol.id]['vol_size'] = vol.size
             underused_volumes[vol.id]['device'] = vol.attachments[0]['Device']
 
+    log.log_time('<- check_underused_volume')
     return { 'underused_volumes': underused_volumes, 'underused_size': underused_size, 'underused_price' : underused_price }
 
 
@@ -168,6 +183,7 @@ def get_cw_volume_iops(cw, volume_id, nu_days):
     '''Return (read_ops, write_ops) for the last nu_days.
        May generate an exception (for ex: access denied in CW)
     '''
+    log.log_time('-> get_cw_volume_iops')
     now = datetime.utcnow()
     past = now - timedelta(days=nu_days)
     #future = now + timedelta(minutes=10)
@@ -214,6 +230,7 @@ def get_cw_volume_iops(cw, volume_id, nu_days):
         write_ops = None
         raise e
 
+    log.log_time('<- get_cw_volume_iops')
     return read_ops, write_ops
 
 
@@ -236,6 +253,7 @@ def get_cw_volume_iops(cw, volume_id, nu_days):
 #   },....
 # }
 def check_reserved_instances(customer, rsvlist, ec2list):
+    log.log_time('-> check_reserved_instances')
     rsv_alloc = {}
     unused_ec2 = {}     # unused_ec2[inst_id] = { 'inst': <instance>, 'name': <name>, 'value': <percentage_of_unused>, 'days': <value in days> }
 
@@ -365,34 +383,83 @@ def check_reserved_instances(customer, rsvlist, ec2list):
     #print(rsv_alloc)
     #print(unused_ec2)
 
+    log.log_time('<- check_reserved_instances')
     return rsv_alloc, unused_ec2
 
 
+# if boto3 were asyncio compatible, this would be unuseful, but
+# we need to improve performance with parallelism
+cloudwatch = None
 def check_instances_usage(customer, instances):
+    log.log_time('-> check_instances_usage')
+    global  cloudwatch
     cloudwatch = utils.get_cloudwatch(customer)
     buckets = {}
+    inst_list = []
+    inst_name = {}
+
     for inst in instances:
-        if inst.state['Name'] == awsdef.EC2_RUNNING:
-            cpu, netin, netout = check_instance_usage(cloudwatch, inst)
-            if cpu is None or netin is None or netout is None:
-                continue
-            bucket = {
-                'name': utils.get_instance_name(inst, customer.aws_resource_tag_name),
-                'weekdays': [],
-                'hours': [],
-            }
-            for a, b, c in zip(cpu['weekdays'], netin['weekdays'], netout['weekdays']):
-                bucket['weekdays'].append(a + b + c)
+        if inst.state['Name'] != awsdef.EC2_RUNNING:
+            continue
 
-            for a, b, c in zip(cpu['hours'], netin['hours'], netout['hours']):
-                bucket['hours'].append(a + b + c)
+        inst_list.append(inst.id)
+        inst_name[inst.id] = utils.get_instance_name(inst, customer.aws_resource_tag_name)
 
-            buckets[inst.id] = bucket
+    # for inst in instances:
+    #     if inst.state['Name'] == awsdef.EC2_RUNNING:
+    #         cpu, netin, netout = check_instance_usage(cloudwatch, inst)
+    #         if cpu is None or netin is None or netout is None:
+    #             continue
+    #         bucket = {
+    #             'name': utils.get_instance_name(inst, customer.aws_resource_tag_name),
+    #             'weekdays': [],
+    #             'hours': [],
+    #         }
+    #         for a, b, c in zip(cpu['weekdays'], netin['weekdays'], netout['weekdays']):
+    #             bucket['weekdays'].append(a + b + c)
+    #
+    #         for a, b, c in zip(cpu['hours'], netin['hours'], netout['hours']):
+    #             bucket['hours'].append(a + b + c)
+    #
+    #         buckets[inst.id] = bucket
+    #
+    # return buckets
 
+    with mp.Pool(processes=params.parm_parallelism_level) as pool:
+        results = pool.map(_check_instance_usage, inst_list)
+
+    #print(results)
+    for inst, bucket in zip(inst_list, results):
+        bucket['name'] = inst_name[inst]
+        buckets[inst] = bucket
+
+    log.log_time('<- check_instances_usage')
     return buckets
 
 
-def check_instance_usage(cw, instance):
+def _check_instance_usage(inst_id):
+    log.log_time('-> _check_instances_usage: %s' % inst_id)
+    cpu, netin, netout = check_instance_usage(cloudwatch, inst_id)
+    if cpu is None or netin is None or netout is None:
+        return None
+
+    bucket = {
+        #'name': utils.get_instance_name(inst, customer.aws_resource_tag_name),
+        'name': inst_id,
+        'weekdays': [],
+        'hours': [],
+    }
+    for a, b, c in zip(cpu['weekdays'], netin['weekdays'], netout['weekdays']):
+        bucket['weekdays'].append(a + b + c)
+
+    for a, b, c in zip(cpu['hours'], netin['hours'], netout['hours']):
+        bucket['hours'].append(a + b + c)
+
+    log.log_time('<- _check_instances_usage: %s' % inst_id)
+    return bucket
+
+
+def check_instance_usage(cw, inst_id):
     now = datetime.utcnow()
     now = datetime(now.year, now.month, now.day, now.hour)
     past = now - timedelta(minutes=60*24*30)
@@ -401,7 +468,7 @@ def check_instance_usage(cw, instance):
     results = cw.get_metric_statistics(
                 Namespace='AWS/EC2',
                 MetricName='CPUUtilization',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                Dimensions=[{'Name': 'InstanceId', 'Value': inst_id}],
                 StartTime=past,
                 EndTime=future,
                 Period=60*60,   # in seconds
@@ -414,7 +481,7 @@ def check_instance_usage(cw, instance):
     results = cw.get_metric_statistics(
                 Namespace='AWS/EC2',
                 MetricName='DiskReadBytes',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                Dimensions=[{'Name': 'InstanceId', 'Value': inst_id}],
                 StartTime=past,
                 EndTime=future,
                 Period=60*60,   # in seconds
@@ -425,7 +492,7 @@ def check_instance_usage(cw, instance):
     results = cw.get_metric_statistics(
                 Namespace='AWS/EC2',
                 MetricName='DiskWriteBytes',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                Dimensions=[{'Name': 'InstanceId', 'Value': inst_id}],
                 StartTime=past,
                 EndTime=future,
                 Period=60*60,   # in seconds
@@ -437,7 +504,7 @@ def check_instance_usage(cw, instance):
     results = cw.get_metric_statistics(
                 Namespace='AWS/EC2',
                 MetricName='NetworkIn',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                Dimensions=[{'Name': 'InstanceId', 'Value': inst_id}],
                 StartTime=past,
                 EndTime=future,
                 Period=60*60,   # in seconds
@@ -448,7 +515,7 @@ def check_instance_usage(cw, instance):
     results = cw.get_metric_statistics(
                 Namespace='AWS/EC2',
                 MetricName='NetworkOut',
-                Dimensions=[{'Name': 'InstanceId', 'Value': instance.id}],
+                Dimensions=[{'Name': 'InstanceId', 'Value': inst_id}],
                 StartTime=past,
                 EndTime=future,
                 Period=60*60,   # in seconds

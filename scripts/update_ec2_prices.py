@@ -2,7 +2,7 @@ import sys
 import json
 
 #download_url = 'https://pricing.us-east-1.amazonaws.com/offers/v2.0/aws/AmazonEC2/current/index.json'
-price_file = 'index.json'
+price_file = '../data/index.json'
 
 def _get_region(region):
     return region
@@ -17,32 +17,75 @@ if not data:
     print('JSON Data are empty', file=sys.stderr)
     exit(1)
 
+restype = 'ec2'
+pubdate = data['publicationDate']
 products = data['products']
 terms = data['terms']
 
-# prices[region][instanceType][term] = price
 prices = {}
 
-for k in products:
-    if products[k]['productFamily'] != 'Compute Instance':
+for k, v in products.items():
+    p_sku = k
+    if v['productFamily'] != 'Compute Instance' and v['productFamily'] != 'Dedicated Host':
+        continue
+    attrs = v['attributes']
+    loc = attrs['location']
+    inst_type = attrs['instanceType']
+    tenancy = attrs['tenancy']
+    op_system = attrs['operatingSystem']
+    #print(p_sku, loc, inst_type, tenancy, op_system)
+
+    prices[p_sku] = {
+        'loc': loc, 'inst_type': inst_type, 'tenancy': tenancy, 'os': op_system,
+        'OnDemand': {}, 'Reserved': {},
+    }
+
+for p_sku, v in terms['OnDemand'].items():
+    if p_sku not in prices:
+        #print(p_sku, 'not in prices')
         continue
 
-    attrs = products[k]['attributes']
-    if attrs['operatingSystem'] != 'Linux':
+    for k2, v2 in v.items():
+        # normally only one item
+        term_code = v2['offerTermCode']
+       
+        for k3, v3 in v2['priceDimensions'].items():
+            desc = v3['description']
+            price = v3['pricePerUnit']['USD']
+
+        if 'termAttributes' in v2:
+            a_terms = v2['termAttributes']
+        else:
+            a_terms = None
+
+        prices[p_sku]['OnDemand'][term_code] = {
+           'descr': desc, 'price': price, 'terms': a_terms
+        }
+
+for p_sku, v in terms['Reserved'].items():
+    if p_sku not in prices:
+        #print(p_sku, 'not in prices')
         continue
 
-    region = _get_region(attrs['location'])
-    prices[region] = { 'instanceType': attrs['instanceType'], 'terms': {} }
-    sku = k
+    for k2, v2 in v.items():
+        # normally only one item
+        term_code = v2['offerTermCode']
+       
+        for k3, v3 in v2['priceDimensions'].items():
+            desc = v3['description']
+            price = v3['pricePerUnit']['USD']
 
-    ondemand = terms['OnDemand']
-    if not sku in ondemand: continue
-    key1 = list(ondemand[sku])[0]
-    pricedim = ondemand[sku][key1]['priceDimensions']
-    key2 = list(pricedim)[0]
-    if 'per Linux' not in pricedim[key2]['description']: continue
-    prices[region]['terms']['onDemand'] = pricedim[key2]['pricePerUnit']['USD'] * 24 * 31
+        if 'termAttributes' in v2:
+            a_terms = v2['termAttributes']
+        else:
+            a_terms = None
 
-print(prices)
+        prices[p_sku]['Reserved'][term_code] = {
+           'descr': desc, 'price': price, 'terms': a_terms
+        }
+
+
+for k, v in prices.items():
+    print(k, v)
 
 

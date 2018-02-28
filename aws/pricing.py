@@ -103,7 +103,7 @@ ebs_pricing = { # per zone
 
 ON_DEMAND = 'on_demand'
 RESERVED = 'reserved'
-SPORT = 'spot'
+SPOT = 'spot'
 
 class PricingException(Exception):
     def __init__(self, msg, *args, **kwargs):

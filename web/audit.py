@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -7,13 +8,14 @@ from . import utils
 from .models import Customer
 from .decorators import user_is_owner, aws_creds_defined
 from . import checks as ck
-import aws.params as p
 from . import cache
+from . import log
 
 @login_required
 @user_is_owner
 @aws_creds_defined
 def auditAction(request, cust_name):
+    log.log_time('-> auditAction')
     names = _get_customers()
     customer = _get_customer(cust_name)
 
@@ -159,6 +161,7 @@ def auditAction(request, cust_name):
     buckets = ck.check_instances_usage(customer, instances)
     context['instances_usage'] = buckets
 
+    log.log_time('<- auditAction')
     return render(request, 'audit.html', context)
 
 
@@ -180,4 +183,5 @@ def _get_customers():
 def _get_customer(cust_name):
     customer = Customer.objects.get(name=cust_name)
     return customer
+
 

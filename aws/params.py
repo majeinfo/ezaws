@@ -11,3 +11,7 @@ parm_unused_volumes_min_write_ops = 100
 
 # Number of days of inactivity to determine unused Instances
 parm_unused_instances_nu_days = 365
+
+# Level of parallelism
+parm_parallelism_level = 10
+
