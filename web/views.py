@@ -189,6 +189,7 @@ def get_volumes(request, cust_name):
             v = {'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A',
                  'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A'}
             if not len(vol.attachments):
+                context['total_orphans'] += 1
                 continue
             if len(vol.attachments) and ('InstanceId' in vol.attachments[0]):
                 v['instance_id'] = vol.attachments[0]['InstanceId']
