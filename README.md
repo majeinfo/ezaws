@@ -22,4 +22,3 @@ Default value for DB_HOST is "localhost". In that case, you should add a volume 
 
 You can also define DEBUG environment variable to set the DEBUG mode to True (default is False).
 
-
