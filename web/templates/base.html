@@ -89,6 +89,7 @@
             <li><a style="color:#999999;" onclick="check_snapshots()">Check Snapshots</a></li>
             <li><a style="color:#999999;" onclick="show_elbs()">ELB</a></li>
             <li><a style="color:#999999;" onclick="show_elasticache()">ElastiCache</a></li>
+            <li><a style="color:#999999;" onclick="show_s3()">S3</a></li>
             <li><a style="color:#999999;" onclick="start_audit()">Run Audit</a></li>
             {% endif %}
         </ul>
@@ -186,6 +187,11 @@ function show_elbs() {
 function show_elasticache() {
     var cust_name = get_cust_name();
     window.location = '/web/get_elasticache/' + cust_name;
+}
+
+function show_s3() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_s3/' + cust_name;
 }
 
 function start_audit() {

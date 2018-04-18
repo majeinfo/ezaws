@@ -57,6 +57,11 @@ def get_elasticache(customer):
     return session.client('elasticache')
 
 
+def get_s3(customer):
+    '''Create a boto s3  object to query Customer's Resources'''
+    return get_client(customer, 's3')
+
+
 def get_instance_name(inst, tag_name='Name'):
     # Extract the 'name' from tags
     tag_name = tag_name.lower()

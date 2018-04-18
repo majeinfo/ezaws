@@ -477,6 +477,62 @@ def get_elasticache(request, cust_name):
     return render(request, 'elasticache.html', {'current': cust_name, 'names': names, 'cachelist': cachelist, 'price': price })
 
 
+@login_required
+@user_is_owner
+@aws_creds_defined
+def get_s3(request, cust_name):
+    names = utils.get_customers()
+    customer = utils.get_customer(cust_name)
+    client = utils.get_s3(customer)
+    costs = pricing.Pricing(customer.region)
+
+    def _wrap():
+        bucketlist = []
+        total_price = 0
+
+        try:
+            buckets = client.list_buckets()
+        except Exception as e:
+            messages.error(request, e)
+            utils.check_perm_message(request, cust_name)
+            return 0, bucketlist
+
+        cw = utils.get_cloudwatch(customer)
+        now = datetime.now()
+
+        for bucket in buckets['Buckets']:
+            # Get metrics from CloudWatch
+            results = cw.get_metric_statistics(
+                Namespace='AWS/S3',
+                MetricName='BucketSizeBytes', # 'NumberOfObjects' => AllStorageTypes
+                Dimensions=[
+                    {'Name': 'BucketName', 'Value': bucket['Name']},
+                    {'Name': 'StorageType', 'Value': 'StandardStorage'} #  StandardIAStorage,  ReducedRedundancyStorage
+                ],
+                StartTime=now - timedelta(days=2),
+                EndTime=now,
+                Period=86400,
+                Statistics=['Average']
+            )
+            size = results["Datapoints"][0]["Average"] if len(results["Datapoints"]) else 'n/a'
+            size //= 1024*1024*1024;    # GiB conversion
+
+            #price = costs.get_ElastiCache_cost_per_hour(cache['CacheNodeType'][len('cache.'):])
+            bucketlist.append({
+                'name': bucket['Name'],
+                'creation_date': bucket['CreationDate'],
+                'size': int(size),
+                # 'price': price,
+            })
+
+            #total_price += price
+
+        return total_price, bucketlist
+
+    (price, bucketlist) = _wrap()
+    return render(request, 's3.html', {'current': cust_name, 'names': names, 'bucketlist': bucketlist, 'price': price })
+
+
 def _is_elastic_ip(ips, public_ip):
     if not 'Addresses' in ips: return False
     for ip in ips['Addresses']:
