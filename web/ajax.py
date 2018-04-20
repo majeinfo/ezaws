@@ -236,3 +236,50 @@ def get_vol_ops(request, cust_name, volume_id):
 
     return HttpResponse(json.dumps({ 'read_ops': read_ops, 'write_ops': write_ops }), content_type='application/json')
 
+
+@login_required
+@user_is_owner
+def get_s3_metrics(request, cust_name, bucket_name):
+    customer = Customer.objects.get(name=cust_name)
+    cloudwatch = utils.get_cloudwatch(customer)
+
+    now = datetime.utcnow()
+    past = now - timedelta(minutes=30)
+    future = now + timedelta(minutes=10)
+
+    results = cloudwatch.get_metric_statistics(
+        Namespace='AWS/S3',
+        MetricName='BucketSizeBytes',  # 'NumberOfObjects' => AllStorageTypes
+        Dimensions=[
+            {'Name': 'BucketName', 'Value': bucket_name},
+            {'Name': 'StorageType', 'Value': 'StandardStorage'}  # StandardIAStorage,  ReducedRedundancyStorage
+        ],
+        StartTime=now - timedelta(days=2),
+        EndTime=now,
+        Period=86400,
+        Statistics=['Average']
+    )
+
+    if len(results["Datapoints"]):
+        size = results["Datapoints"][0]["Average"]
+        size //= 1024 * 1024 * 1024;  # GiB conversion
+    else:
+        size = 'n/a'
+
+    results = cloudwatch.get_metric_statistics(
+        Namespace='AWS/S3',
+        MetricName='NumberOfObjects',
+        Dimensions=[
+            {'Name': 'BucketName', 'Value': bucket_name},
+            {'Name': 'StorageType', 'Value': 'AllStorageTypes'}
+        ],
+        StartTime=now - timedelta(days=2),
+        EndTime=now,
+        Period=86400,
+        Statistics=['Average']
+    )
+
+    nb_obj = results["Datapoints"][0]["Average"] if len(results["Datapoints"]) else 'n/a'
+
+    return HttpResponse(json.dumps({ 'bucket_size': size, 'nb_objects': nb_obj }), content_type='application/json')
+

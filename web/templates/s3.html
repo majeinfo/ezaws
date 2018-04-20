@@ -1,49 +1,29 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load humanize %}
 {% block title %}{% trans "S3 Buckets" %}{% endblock %}
 
 {% block content %}
 <script>
-    function set_alarm(tag, value, warning, critical) {
-        if (value == 'N/A') {
-            $(tag).toggleClass("badge badge-secondary");
-        }
-        else if (critical) {
-            $(tag).toggleClass("badge badge-danger");
-        }
-        else if (warning) {
-            $(tag).toggleClass("badge badge-warning");
-        }
-        else {
-            $(tag).toggleClass("badge badge-info");
-        }
-    }
+    function get_s3_metrics(bucket_name, normalized_name) {
+        var tag_size = "#s3-size-" + normalized_name;
+        var tag_count = "#s3-count-" + normalized_name;
 
-    function get_cache_metrics(cache_type, cache_name) {
         $.ajax({
-        url : "/web/ajax/get_cache_metrics/{{ current }}/" + cache_type + "/" + cache_name, // the endpoint
+        url : "/web/ajax/get_s3_metrics/{{ current }}/" + bucket_name, // the endpoint
         type : "GET", // http method
         data : '',
 
         // handle a successful response
         success : function(json) {
-            var tag = "#metric-cpu-max-" + cache_name;
-            $(tag).html(json.cpu_max);
-            // This is a memcached rule. For Redis, it depends on the count of cores (cpu_count < 100/#cores)
-            set_alarm(tag, json.cpu_max, json.cpu_max > 70, json.cpu_max > 90);
-
-            tag = "#metric-cpu-avg-" + cache_name;
-            $(tag).html(json.cpu_avg);
-            set_alarm(tag, json.cpu_max, json.cpu_max > 70, json.cpu_max > 90);
-
-            tag = "#metric-total-gets-" + cache_name;
-            $(tag).html(json.total_gets);
-            set_alarm(tag, json.total_gets, json.total_gets < 100, json.total_gets < 10 || json.total_gets == 'N/A');
+            $(tag_size).html(json.bucket_size);
+            $(tag_size).toggleClass("badge badge-info");
+            $(tag_count).html(json.nb_objects);
+            $(tag_count).toggleClass("badge badge-info");
         },
 
         // handle a non-successful response
         error : function(xhr,errmsg,err) {
-            var tag = "#metric-cpu-max-" + cache_name;
             $(tag).html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
                 " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
@@ -58,13 +38,19 @@
     <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="badge badge-light"><b>${{ price }}</b></span> (without Data Transfer)</button>
 </h2>
 <table class="table table-hover">
-    <thead><td>Name</td><td>Size</td><td>Creation Date</td></thead>
+    <thead><td>Name</td><td>Creation Date</td><td>Size (GiB)</td><td>Object Count</td></thead>
     <tbody class="table-striped">
     {% for bucket in bucketlist %}
         <tr>
             <td><h5><span class="badge badge-dark">{{ bucket.name }}</span></h5></td>
-            <td><span class="badge badge-info">{{ bucket.size }} GiB</span></td>
             <td><span class="badge badge-success">{{ bucket.creation_date }}</span></td>
+            <td>
+                <span id="s3-size-{{ bucket.normalized_name }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                <script>get_s3_metrics("{{ bucket.name }}", "{{ bucket.normalized_name }}")</script>
+            </td>
+            <td>
+                <span id="s3-count-{{ bucket.normalized_name }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+            </td>
         </tr>
     {% endfor %}
     </tbody>

@@ -502,26 +502,27 @@ def get_s3(request, cust_name):
 
         for bucket in buckets['Buckets']:
             # Get metrics from CloudWatch
-            results = cw.get_metric_statistics(
-                Namespace='AWS/S3',
-                MetricName='BucketSizeBytes', # 'NumberOfObjects' => AllStorageTypes
-                Dimensions=[
-                    {'Name': 'BucketName', 'Value': bucket['Name']},
-                    {'Name': 'StorageType', 'Value': 'StandardStorage'} #  StandardIAStorage,  ReducedRedundancyStorage
-                ],
-                StartTime=now - timedelta(days=2),
-                EndTime=now,
-                Period=86400,
-                Statistics=['Average']
-            )
-            size = results["Datapoints"][0]["Average"] if len(results["Datapoints"]) else 'n/a'
-            size //= 1024*1024*1024;    # GiB conversion
+            # results = cw.get_metric_statistics(
+            #     Namespace='AWS/S3',
+            #     MetricName='BucketSizeBytes', # 'NumberOfObjects' => AllStorageTypes
+            #     Dimensions=[
+            #         {'Name': 'BucketName', 'Value': bucket['Name']},
+            #         {'Name': 'StorageType', 'Value': 'StandardStorage'} #  StandardIAStorage,  ReducedRedundancyStorage
+            #     ],
+            #     StartTime=now - timedelta(days=2),
+            #     EndTime=now,
+            #     Period=86400,
+            #     Statistics=['Average']
+            # )
+            # size = results["Datapoints"][0]["Average"] if len(results["Datapoints"]) else 'n/a'
+            # size //= 1024*1024*1024;    # GiB conversion
 
             #price = costs.get_ElastiCache_cost_per_hour(cache['CacheNodeType'][len('cache.'):])
             bucketlist.append({
                 'name': bucket['Name'],
+                'normalized_name': bucket['Name'].replace('.', '-'),
                 'creation_date': bucket['CreationDate'],
-                'size': int(size),
+                #'size': int(size),
                 # 'price': price,
             })
 
