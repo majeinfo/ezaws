@@ -36,6 +36,7 @@ def auditAction(request, cust_name):
         'long_time_stopped_instances': [], 'long_time_stopped_inst_vol_size': 0, 'long_time_stopped_inst_vol_price': 0,
         'total_ri': 0, 'ri_not_filled': {}, 'ec2_without_ri': [],
         'instances_usage': [],
+        'total_obsolete_volumes': 0, 'obsolete_volumes': [],
     }
 
     # Get instances
@@ -58,6 +59,11 @@ def auditAction(request, cust_name):
     else:
         utils.check_perm_message(request, cust_name)
         return render(request, 'audit.html', context)
+
+    # Check obsolete Volumes
+    result = ck.check_obsolete_volumes(customer, volumes, instances)
+    context['total_obsolete_volumes'] = result['total']
+    context['obsolete_volumes'] = result['volumes']
 
     # Check underused Volumes
     try:

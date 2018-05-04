@@ -102,3 +102,15 @@ def get_ec2_volume_size_price(customer, inst_id, volumes):
 
     return total_vol_size, total_price
 
+
+def get_instance_name_from_volume(customer, volume, instances):
+    inst_id = volume.attachments[0]['InstanceId']
+    inst_name = 'Unknown !'
+    for inst in instances:
+        if inst_id == inst.instance_id:
+            inst_name = get_instance_name(inst, customer.aws_resource_tag_name)
+            if inst_name is None:
+                inst_name = inst.instance_id
+            break
+
+    return inst_name

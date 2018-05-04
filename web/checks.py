@@ -32,6 +32,18 @@ def check_orphan_volumes(customer, volumes):
     return { 'orphans': orphans, 'total_size': total_size, 'vol_sizes': vol_sizes, 'total_price': total_price }
 
 
+def check_obsolete_volumes(customer, volumes, instances):
+    total = 0
+    obs_list = []
+    for vol in volumes:
+        if vol.volume_type == 'standard':
+            total += 1
+            inst_name = utils.get_instance_name_from_volume(customer, vol, instances)
+            obs_list.append({'id': vol.id, 'inst_name': inst_name})
+
+    return { 'total': total, 'volumes': obs_list }
+
+
 def check_orphan_amis(customer, amis, instances):
     log.log_time('-> check_orphan_amis')
     costs = pricing.Pricing(customer.region)
@@ -112,13 +124,6 @@ def check_stopped_instances(customer, instances, volumes):
             # Compute the Volumes size
             total_vol_size, price = utils.get_ec2_volume_size_price(customer, inst.instance_id, volumes)
             total_price += price
-
-            # for vol in volumes:
-            #     if len(vol.attachments) and vol.attachments[0]['InstanceId'] == inst.instance_id:
-            #         total_vol_size += vol.size
-            #         total_price += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
-            #         #break
-
             name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
             stopped_inst[inst.instance_id] = { 'total_vol_size': total_vol_size, 'name': name }
             total_size += total_vol_size
@@ -135,7 +140,7 @@ def check_long_time_stopped_instances(customer, instances):
             #print(inst.launch_time)
             now = timezone.now()
             past = now - timedelta(days=params.parm_unused_instances_nu_days)
-            print(past)
+            #print(past)
             if inst.launch_time < past:
                 name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
                 stopped_inst[inst.instance_id] = { 'days': (now - inst.launch_time).days, 'name': name }
@@ -164,13 +169,15 @@ def check_underused_volume(customer, volumes, instances):
             if (not len(vol.attachments)) or ('InstanceId' not in vol.attachments[0]):
                 continue
 
-            inst_id = vol.attachments[0]['InstanceId']
-            for inst in instances:
-                if inst_id == inst.instance_id:
-                    inst_name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
-                    if inst_name is None:
-                        inst_name = inst.instance_id
-                    break
+            inst_name = utils.get_instance_name_from_volume(customer, vol, instances)
+
+            # inst_id = vol.attachments[0]['InstanceId']
+            # for inst in instances:
+            #     if inst_id == inst.instance_id:
+            #         inst_name = utils.get_instance_name(inst, customer.aws_resource_tag_name)
+            #         if inst_name is None:
+            #             inst_name = inst.instance_id
+            #         break
             underused_volumes[vol.id]['inst_name'] = inst_name
             underused_volumes[vol.id]['vol_size'] = vol.size
             underused_volumes[vol.id]['device'] = vol.attachments[0]['Device']
@@ -547,5 +554,4 @@ def _put_in_buckets(results, threshold):
             buckets['hours'][t.hour] += 1
 
     return buckets
-
 
