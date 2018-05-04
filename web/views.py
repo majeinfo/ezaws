@@ -186,7 +186,7 @@ def get_volumes(request, cust_name):
             context['total_vols'] += 1
             context['total_size'] += vol.size
             context['total_price'] += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
-            v = {'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A',
+            v = {'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A', 'type': vol.volume_type,
                  'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A'}
             if not len(vol.attachments):
                 context['total_orphans'] += 1
