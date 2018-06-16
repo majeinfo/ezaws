@@ -37,7 +37,11 @@ def auditAction(request, cust_name):
         'total_ri': 0, 'ri_not_filled': {}, 'ec2_without_ri': [],
         'instances_usage': [],
         'total_obsolete_volumes': 0, 'obsolete_volumes': [],
+        'orphan_rds_snapshots': [],
     }
+
+    # Check for Orphan RDS Snapshots
+    context['orphan_rds_snapshots'] = ck.check_orphan_rds_snapshots(customer)
 
     # Get instances
     try:

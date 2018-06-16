@@ -255,6 +255,29 @@
 
 <hr/>
 <h2>
+    <button class="btn btn-primary btn-lg" type="button">Orphan RDS Snaphots</button>
+</h2>
+
+<table class="table table-hover">
+    <thead><tr><td>Snapshot Name</td><td>Creation Time</td><td>Engine</td><td>Size</td><td>Price</td></tr></thead>
+    <tbody class="table-striped">
+
+    <!-- Orphan RDS Snapshots -->
+    {% for inst in orphan_rds_snapshots %}
+    <tr>
+        <td><span class="btn btn-info">{{ inst.snap_id }}</span></td>
+        <td><span class="badge badge-secondary">{{ inst.create_time }}</span></td>
+        <td><span class="badge badge-success">{{ inst.engine }}</span></td>
+        <td><span class="badge badge-primary">{{ inst.size }}</span></td>
+        <td><span class="badge badge-warning">{{ inst.price }}</span></td>
+    </tr>
+    {% endfor %}
+
+    </tbody>
+</table>
+
+<hr/>
+<h2>
     <button class="btn btn-primary btn-lg" type="button">EC2 Instances Usage (experimental)</button>
 </h2>
 

@@ -555,3 +555,25 @@ def _put_in_buckets(results, threshold):
 
     return buckets
 
+
+def check_orphan_rds_snapshots(customer):
+    orphans = []
+    client = utils.get_client(customer, 'rds')
+
+    rds_instances = client.describe_db_instances()
+    rds_snapshots = client.describe_db_snapshots()
+    for snap in rds_snapshots['DBSnapshots']:
+        rds_inst_id = snap['DBInstanceIdentifier']
+        for inst in rds_instances['DBInstances']:
+            if rds_inst_id == inst['DBInstanceIdentifier']:
+                break
+        else:
+            orphans.append({
+                'snap_id': snap['DBSnapshotIdentifier'],
+                'create_time': snap['SnapshotCreateTime'],
+                'engine': snap['Engine'],
+                'size': snap['AllocatedStorage'],
+                'price': int(snap['AllocatedStorage'] * 0.1),
+            })
+
+    return orphans
