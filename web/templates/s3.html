@@ -5,9 +5,13 @@
 
 {% block content %}
 <script>
+    var total_size = 0;
+
     function get_s3_metrics(bucket_name, normalized_name) {
         var tag_size = "#s3-size-" + normalized_name;
         var tag_count = "#s3-count-" + normalized_name;
+        var total_size_tag = "#total_size";
+        var total_price_tag = "#total_price";
 
         $.ajax({
         url : "/web/ajax/get_s3_metrics/{{ current }}/" + bucket_name, // the endpoint
@@ -20,6 +24,11 @@
             $(tag_size).toggleClass("badge badge-info");
             $(tag_count).html(json.nb_objects);
             $(tag_count).toggleClass("badge badge-info");
+            if (json.bucket_size != "n/a") {
+                total_size += json.bucket_size;
+                $(total_size_tag).html(total_size);
+                $(total_price_tag).html('$' + (Math.floor(total_size * 0.023)));
+             }
         },
 
         // handle a non-successful response
@@ -35,7 +44,8 @@
   <div class="card-body">
 <h2>
     <button class="btn btn-primary btn-lg" type="button">S3 Bucket List <span class="badge badge-light"><b>{{ bucketlist|length }}</b></span></button>
-    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="badge badge-light"><b>${{ price }}</b></span> (without Data Transfer)</button>
+    <button class="btn btn-warning btn-lg" type="button">Average Price per Month <span class="badge badge-light"><b id="total_price">${{ price }}</b></span> (without Data Transfer)</button>
+    <button class="btn btn-success btn-lg" type="button">Total Size <span class="badge badge-light"><b id="total_size">0</b></span>  GiB</button>
 </h2>
 <table class="table table-hover">
     <thead><td>Name</td><td>Creation Date</td><td>Size (GiB)</td><td>Object Count</td></thead>
