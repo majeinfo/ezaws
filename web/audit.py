@@ -1,9 +1,15 @@
+import os
+import glob
+import re
 from datetime import datetime
 from django.utils.translation import ugettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.urls import reverse
+from django.core.mail import send_mail
 from . import utils
 from .models import Customer
 from .decorators import user_is_owner, aws_creds_defined
@@ -11,10 +17,103 @@ from . import checks as ck
 from . import cache
 from . import log
 
+
+# TODO: should be called locally
+def cronAuditAllCustomersAction(request):
+    names = _get_customers()
+    for cust_name in names:
+        cronAuditAction(request, cust_name)
+
+    send_mail(
+        'EZAWS Audit all customers',
+        'Adutis done.',
+        'ezaws@delamarche.com',
+        ['ezaws@delamarche.com'],   # TODO: mail should be sent to customer
+        fail_silently=False,
+    )
+
+    return HttpResponse("Done")
+
+
+# TODO: should be called locally
+# TODO: audit reports should not be stored in the web server tree
+def cronAuditAction(request, cust_name):
+    resp = _auditAction(request, cust_name)
+    #print(resp.content)
+
+    # Store the audit
+    target_dir = _get_audit_report_dir(cust_name)
+    if not os.path.isdir(target_dir):
+        try:
+            os.mkdir(target_dir)
+        except Exception as e:
+            # TODO: Store a cron error log
+            return HttpResponse(f"Could not create directory {target_dir}: {e}")
+
+    d = datetime.now()
+    rel_fname = "audit-" + d.strftime("%y%m%d") + ".html"
+    abs_fname = os.path.join(target_dir, rel_fname)
+
+    try:
+        with open(abs_fname, "wb") as f:
+            f.write(resp.content)
+    except Exception as e:
+        # TODO: store a cron error log
+        return HttpResponse(f"Could not create audit report {abs_fname}: {e}")
+
+    return HttpResponse("OK")
+
+
+@login_required
+@user_is_owner
+@aws_creds_defined
+def viewAuditReportsAction(request, cust_name):
+    names = _get_customers()
+    context = {
+        'current': cust_name, 'names': names, 'reports': [],
+    }
+    target_dir = _get_audit_report_dir(cust_name)
+    date_re = re.compile('.*audit-(..)(..)(..)\.html')
+    for report in sorted(glob.glob(os.path.join(target_dir, 'audit-*.html'))):
+        re_res = date_re.search(report)
+        try:
+            audit_date = f"{re_res.group(3)}/{re_res.group(2)}/20{re_res.group(1)}"
+            audit_url = reverse('view_audit_report_action', kwargs={'cust_name': cust_name, 'report_name': f"{re_res.group(1)}{re_res.group(2)}{re_res.group(3)}"})
+            context['reports'].append({ 'date': audit_date, 'url': audit_url })
+        except Exception as e:
+            continue
+
+    return render(request, 'view_audit_reports.html', context)
+
+
+@login_required
+@user_is_owner
+@aws_creds_defined
+def viewAuditReportAction(request, cust_name, report_name):
+    resp = HttpResponse()
+    target_dir = _get_audit_report_dir(cust_name)
+    abs_fname = os.path.join(target_dir, "audit-" + report_name + ".html")
+    try:
+        with open(abs_fname, "rb") as f:
+            resp.content = f.read()
+    except Exception as e:
+        resp.content = b"An error occurred"
+
+    return resp
+
+
+def _get_audit_report_dir(cust_name):
+    return os.path.join(settings.CRON_DIR, cust_name)
+
+
 @login_required
 @user_is_owner
 @aws_creds_defined
 def auditAction(request, cust_name):
+    return _auditAction(request, cust_name)
+
+
+def _auditAction(request, cust_name):
     log.log_time('-> auditAction')
     names = _get_customers()
     customer = _get_customer(cust_name)

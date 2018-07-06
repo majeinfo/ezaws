@@ -91,6 +91,7 @@
             <li><a style="color:#999999;" onclick="show_elasticache()">ElastiCache</a></li>
             <li><a style="color:#999999;" onclick="show_s3()">S3</a></li>
             <li><a style="color:#999999;" onclick="start_audit()">Run Audit</a></li>
+            <li><a style="color:#999999;" onclick="view_audit_reports()">View Audit Reports</a></li>
             {% endif %}
         </ul>
     </div>
@@ -197,6 +198,11 @@ function show_s3() {
 function start_audit() {
     var cust_name = get_cust_name();
     window.location = '/web/audit/' + cust_name;
+}
+
+function view_audit_reports() {
+    var cust_name = get_cust_name();
+    window.location = '/web/view_audit_reports/' + cust_name;
 }
 
 $(document).ready(function() {

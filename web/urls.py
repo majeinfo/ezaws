@@ -19,5 +19,9 @@ urlpatterns = [
     url(r'^get_elasticache/(?P<cust_name>.*)', views.get_elasticache, name='get_elasticache'),
     url(r'^get_s3/(?P<cust_name>.*)', views.get_s3, name='get_s3'),
     url(r'^audit/(?P<cust_name>.*)', audit.auditAction, name='audit_action'),
+    url(r'^view_audit_reports/(?P<cust_name>.*)', audit.viewAuditReportsAction, name='view_audit_reports_action'),
+    url(r'^view_audit_report/(?P<cust_name>[^/]+)/(?P<report_name>[^/]+)', audit.viewAuditReportAction, name='view_audit_report_action'),
+    url(r'^cron_audit/(?P<cust_name>.*)', audit.cronAuditAction, name='cron_audit_action'),
+    url(r'^cron_audit_all_customers', audit.cronAuditAllCustomersAction, name='cron_audit_all_customers_action'),
     url(r'^goto_console/(?P<cust_name>.*)', views.goto_console, name='goto_console'),
 ]
