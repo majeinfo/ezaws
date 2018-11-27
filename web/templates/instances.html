@@ -60,6 +60,7 @@
             {
                 category: "Compute Optimized",
                 prices: {
+                    c5_large: 69, c5_xlarge: 140, c5_2xlarge: 280, c5_4xlarge: 560,
                     c4_large: 84, c4_xlarge: 168, c4_2xlarge: 336, c4_4xlarge: 672, c4_8xlarge: 1350,
                     c3_large: 90, c3_xlarge: 180, c3_2xlarge: 360, c3_4xlarge: 720, c3_8xlarge: 1440
                 }
@@ -76,7 +77,8 @@
                 prices: {
                     x1_16xlarge: 6000, x1_32xlarge: 12000,
                     r3_large: 138, r3_xlarge: 276, r3_2xlarge: 552, r3_4xlarge: 1100, r3_8xlarge: 2200,
-                    r4_large: 110, r4_xlarge: 220, r4_2xlarge: 440, r4_4xlarge: 880, r4_8xlarge: 1760, r4_16xlarge: 3250
+                    r4_large: 110, r4_xlarge: 220, r4_2xlarge: 440, r4_4xlarge: 880, r4_8xlarge: 1760, r4_16xlarge: 3250,
+                    r5_large: 100, r5_xlarge: 200, r5_2xlarge: 400, r5_4xlarge: 800
                 }
             },
             {
@@ -128,6 +130,8 @@
                 {% if inst.instance_state.Name == 'running' %}<span class="badge badge-pill badge-success">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'stopped' %}<span class="badge badge-pill badge-danger">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'terminated' %}<span class="badge badge-pill badge-warning">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'stopping' %}<span class="badge badge-pill badge-secondary">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'pending' %}<span class="badge badge-pill badge-secondary">&nbsp;</span>{% endif %}
                 &nbsp;&nbsp;{{ inst.instance_state.Name }}
             </td>
             <td>{% if inst.is_elastic %}<b>{% endif %}{{ inst.public_ip }}{% if inst.is_elastic %}</b>{% endif %}{% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}</td>
