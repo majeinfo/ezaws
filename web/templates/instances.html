@@ -132,6 +132,7 @@
                 {% if inst.instance_state.Name == 'terminated' %}<span class="badge badge-pill badge-warning">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'stopping' %}<span class="badge badge-pill badge-secondary">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'pending' %}<span class="badge badge-pill badge-secondary">&nbsp;</span>{% endif %}
+                {% if inst.instance_state.Name == 'shutting-down' %}<span class="badge badge-pill badge-secondary">&nbsp;</span>{% endif %}
                 &nbsp;&nbsp;{{ inst.instance_state.Name }}
             </td>
             <td>{% if inst.is_elastic %}<b>{% endif %}{{ inst.public_ip }}{% if inst.is_elastic %}</b>{% endif %}{% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}</td>
