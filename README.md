@@ -1,5 +1,5 @@
 # ezaws 
-# 
+#
 
 This is a simple Django Web Application that allows you to display
 the main information about your AWS Customers.
