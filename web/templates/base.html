@@ -83,6 +83,7 @@
             {% if user.is_authenticated %}
             <li><a style="color:#999999;" onclick="goto_console()">Goto AWS Console</a></li>
             <li><a style="color:#999999;" onclick="show_instances()">Instances</a></li>
+            <li><a style="color:#999999;" onclick="show_amis()">AMIs</a></li>
             <li><a style="color:#999999;" onclick="show_reserved_instances()">Reserved Instances</a></li>
             <li><a style="color:#999999;" onclick="show_volumes()">Volumes</a></li>
             <li><a style="color:#999999;" onclick="show_snapshots()">Snapshots</a></li>
@@ -158,6 +159,11 @@ function goto_console() {
 function show_instances() {
     var cust_name = get_cust_name();
     window.location = '/web/get_instances/' + cust_name;
+}
+
+function show_amis() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_amis/' + cust_name;
 }
 
 function show_reserved_instances() {

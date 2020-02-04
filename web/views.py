@@ -111,6 +111,39 @@ def get_instances(request, cust_name):
 @login_required
 @user_is_owner
 @aws_creds_defined
+def get_amis(request, cust_name):
+    names = utils.get_customers()
+    customer = utils.get_customer(cust_name)
+    client = utils.get_client(customer, 'ec2')
+    session = utils.get_session(customer)
+
+    amilist = []
+    context = {'current': cust_name, 'names': names, 'amilist': amilist}
+
+    ec2 = session.resource('ec2')
+    try:
+        amis = list(ec2.images.filter(Owners=['self']))
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'amis.html', context)
+
+    try:
+        for ami in amis:
+            amilist.append({'name': ami.name,
+                            'image_id': ami.image_id,
+                            'creation_date': ami.creation_date})
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'amis.html', context)
+
+    return render(request, 'amis.html', context)
+
+
+@login_required
+@user_is_owner
+@aws_creds_defined
 def get_reserved_instances(request, cust_name):
     names = utils.get_customers()
     customer = utils.get_customer(cust_name)
