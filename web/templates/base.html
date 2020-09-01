@@ -151,14 +151,18 @@ function get_cust_name() {
     return cust_name;
 }
 
+function get_region_name() {
+    var region_name = $("select.region_name").val();
+    return region_name;
+}
+
 function goto_console() {
     var cust_name = get_cust_name();
     window.open('/web/goto_console/' + cust_name, '_blank');
 }
 
 function show_instances() {
-    var cust_name = get_cust_name();
-    window.location = '/web/get_instances/' + cust_name;
+    window.location = '/web/get_instances/' + get_cust_name();
 }
 
 function show_amis() {
