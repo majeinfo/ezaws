@@ -1,4 +1,4 @@
-# ezaws 
+# ezaws
 # 
 
 This is a simple Django Web Application that allows you to display
