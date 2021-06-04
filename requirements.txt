@@ -1,6 +1,6 @@
 boto3==1.6.1
 botocore==1.9.1
-Django==2.2.6
+Django==2.2.21
 django-bootstrap4==0.0.5
 django-debug-toolbar==1.9.1
 django-decorator-include==1.3
