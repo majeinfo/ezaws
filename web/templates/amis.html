@@ -3,8 +3,9 @@
 {% block title %}{% trans "AMIs" %}{% endblock %}
 
 {% block content %}
-<div class="card card-default">
-  <div class="card-body">
+<h2>
+    <button class="btn btn-primary btn-lg" type="button">AMI List <span class="badge badge-light"><b>{{ amilist|length }}</b></span></button>
+</h2>
 
 <table class="table table-hover">
     <thead><tr><td>Name</td><td>AMI ID</td><td>Creation Date</td></tr></thead>
@@ -18,6 +19,4 @@
     {% endfor %}
     </tbody>
 </table>
-  </div>
-</div>
 {% endblock %}
