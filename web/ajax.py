@@ -239,9 +239,13 @@ def get_vol_ops(request, cust_name, volume_id):
 
 @login_required
 @user_is_owner
-def get_s3_metrics(request, cust_name, bucket_name):
+def get_s3_metrics(request, cust_name, bucket_name, location):
     customer = Customer.objects.get(name=cust_name)
-    cloudwatch = utils.get_cloudwatch(customer)
+    if customer.region != location:
+        customer.region = location
+        cloudwatch = utils.get_cloudwatch(customer)
+    else:
+        cloudwatch = utils.get_cloudwatch(customer)
 
     now = datetime.utcnow()
     past = now - timedelta(minutes=30)

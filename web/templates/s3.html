@@ -7,14 +7,14 @@
 <script>
     var total_size = 0;
 
-    function get_s3_metrics(bucket_name, normalized_name) {
+    function get_s3_metrics(bucket_name, normalized_name, location) {
         var tag_size = "#s3-size-" + normalized_name;
         var tag_count = "#s3-count-" + normalized_name;
         var total_size_tag = "#total_size";
         var total_price_tag = "#total_price";
 
         $.ajax({
-        url : "/web/ajax/get_s3_metrics/{{ current }}/" + bucket_name, // the endpoint
+        url : "/web/ajax/get_s3_metrics/{{ current }}/" + bucket_name + '/' + location, // the endpoint
         type : "GET", // http method
         data : '',
 
@@ -56,7 +56,7 @@
             <td><span class="badge badge-success">{{ bucket.creation_date }}</span></td>
             <td>
                 <span id="s3-size-{{ bucket.normalized_name }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
-                <script>get_s3_metrics("{{ bucket.name }}", "{{ bucket.normalized_name }}")</script>
+                <script>get_s3_metrics("{{ bucket.name }}", "{{ bucket.normalized_name }}", "{{ bucket.location }}")</script>
             </td>
             <td>
                 <span id="s3-count-{{ bucket.normalized_name }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
