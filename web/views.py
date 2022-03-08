@@ -532,11 +532,17 @@ def get_s3(request, cust_name):
 
         for bucket in buckets['Buckets']:
             location = client.get_bucket_location(Bucket=bucket['Name'])
+            location = location['LocationConstraint']
+            if location is None or location == "None":
+                location = "us-east-1"
+            if location == "EU":
+                location = "eu-west-1"
+
             bucketlist.append({
                 'name': bucket['Name'],
                 'normalized_name': bucket['Name'].replace('.', '-'),
                 'creation_date': bucket['CreationDate'],
-                'location': location['LocationConstraint'],
+                'location': location,
                 #'size': int(size),
                 # 'price': price,
             })
