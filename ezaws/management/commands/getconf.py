@@ -1,3 +1,4 @@
+import json
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from web.models import Customer, Infrastructure
@@ -36,7 +37,7 @@ def _get_infrastructure(customer):
 
     _get_instances(customer)
     _get_security_groups(customer)
-    _get_iam_roles(customer) # TODO
+    _get_iam_roles(customer)
     _get_volumes(customer)
     _get_snapshots(customer)
     _get_elbs(customer)
@@ -82,8 +83,19 @@ def _get_security_groups(customer):
         print(e)
 
 def _get_iam_roles(customer):
-    # TODO
-    pass
+    client = get_client(customer, 'iam')
+    try:
+        roles = client.list_roles()
+        if verbosity >= VERBOSE:
+            print(roles)
+
+        _save_object(customer, cur_date, 'roles', roles)
+
+        for role in roles['Roles']:
+            _save_object(customer, cur_date, 'role', role)
+    except Exception as e:
+        print(f'Failed to get roles of customer {customer.name}')
+        print(e)
 
 def _get_volumes(customer):
     client = get_client(customer, 'ec2')
@@ -103,7 +115,7 @@ def _get_volumes(customer):
 def _get_snapshots(customer):
     client = get_client(customer, 'ec2')
     try:
-        snapshots = client.describe_snapshots()
+        snapshots = client.describe_snapshots(OwnerIds=['self'])
         if verbosity >= VERBOSE:
             print(snapshots)
 
@@ -219,6 +231,6 @@ def _save_object(customer, date, object_type, object_value):
         customer=customer,
         date=date,
         object_type=object_type,
-        object_value=object_value
+        object_value=json.dumps(object_value, default=str)
     )
     infra_object.save()
