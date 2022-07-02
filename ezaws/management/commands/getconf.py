@@ -26,7 +26,6 @@ class Command(BaseCommand):
             if cust.is_active:
                 self.stdout.write(cust.name)
                 _get_infrastructure(cust)
-                break
 
         if verbosity >= NORMAL:
             self.stdout.write("End import")
@@ -37,14 +36,14 @@ def _get_infrastructure(customer):
 
     _get_instances(customer)
     _get_security_groups(customer)
-    _get_iam_roles(customer)
+    _get_iam_roles(customer) # TODO
     _get_volumes(customer)
     _get_snapshots(customer)
     _get_elbs(customer)
     _get_target_groups(customer)
+    _get_autoscaling(customer)
+    _get_cloudfront(customer)
     # S3 bucket
-    # AS group
-    # Launch configuration
     # SNS
     # SQS
     # Lambda
@@ -57,13 +56,12 @@ def _get_instances(customer):
         if verbosity >= VERBOSE:
             print(instances)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='instances',
-            object_value=instances
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'instances', instances)
+
+        for reservation in instances['Reservations']:
+            for instance in reservation['Instances']:
+                _save_object(customer, cur_date, 'instance', instance)
+
     except Exception as e:
         print(f'Failed to get instances of customer {customer.name}')
         print(e)
@@ -75,18 +73,16 @@ def _get_security_groups(customer):
         if verbosity >= VERBOSE:
             print(sec_groups)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='security_groups',
-            object_value=sec_groups
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'security_groups', sec_groups)
+
+        for sec_group in sec_groups['SecurityGroups']:
+            _save_object(customer, cur_date, 'security_group', sec_group)
     except Exception as e:
         print(f'Failed to get security groups of customer {customer.name}')
         print(e)
 
 def _get_iam_roles(customer):
+    # TODO
     pass
 
 def _get_volumes(customer):
@@ -96,13 +92,10 @@ def _get_volumes(customer):
         if verbosity >= VERBOSE:
             print(volumes)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='volumes',
-            object_value=volumes
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'volumes', volumes)
+
+        for volume in volumes['Volumes']:
+            _save_object(customer, cur_date, 'volume', volume)
     except Exception as e:
         print(f'Failed to get volumes of customer {customer.name}')
         print(e)
@@ -114,13 +107,10 @@ def _get_snapshots(customer):
         if verbosity >= VERBOSE:
             print(snapshots)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='snapshots',
-            object_value=snapshots
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'snapshots', snapshots)
+
+        for snapshot in snapshots['Snapshots']:
+            _save_object(customer, cur_date, 'snapshot', snapshot)
     except Exception as e:
         print(f'Failed to get snapshots of customer {customer.name}')
         print(e)
@@ -132,13 +122,7 @@ def _get_elbs(customer):
         if verbosity >= VERBOSE:
             print(elbs)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='elbs',
-            object_value=elbs
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'elbs', elbs)
     except Exception as e:
         print(f'Failed to get elbs of customer {customer.name}')
         print(e)
@@ -149,48 +133,23 @@ def _get_elbs(customer):
         if verbosity >= VERBOSE:
             print(elbs)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='elbv2s',
-            object_value=elbs
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'elbv2s', elbs)
 
         for elb in elbs['LoadBalancers']:
+            _save_object(customer, cur_date, 'elbv2', elb)
             attrs = client.describe_load_balancer_attributes(LoadBalancerArn=elb['LoadBalancerArn'])
             value = {'LoadBalancerArn': elb['LoadBalancerArn'], "Attributes": attrs}
-
-            infra_object = Infrastructure(
-                customer=customer,
-                date=cur_date,
-                object_type='elbv2_attrs',
-                object_value=value
-            )
-            infra_object.save()
+            _save_object(customer, cur_date, 'elbv2_attrs', value)
 
         for elb in elbs['LoadBalancers']:
             listeners = client.describe_listeners(LoadBalancerArn=elb['LoadBalancerArn'])
-
-            infra_object = Infrastructure(
-                customer=customer,
-                date=cur_date,
-                object_type='elbv2_listeners',
-                object_value=listeners
-            )
-            infra_object.save()
+            _save_object(customer, cur_date, 'elbv2_listeners', listeners)
 
         for listener in listeners['Listeners']:
             rules = client.describe_rules(ListenerArn=listener['ListenerArn'])
             value = {'ListenerArn': listener['ListenerArn'], "Rules": rules}
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='elbv2_rules',
-            object_value=value
-        )
-        infra_object.save()
+            _save_object(customer, cur_date, 'elbv2_rules', value)
 
         # TODO: describe_listener_certificates ?
 
@@ -205,13 +164,61 @@ def _get_target_groups(customer):
         if verbosity >= VERBOSE:
             print(target_groups)
 
-        infra_object = Infrastructure(
-            customer=customer,
-            date=cur_date,
-            object_type='target_groups',
-            object_value=target_groups
-        )
-        infra_object.save()
+        _save_object(customer, cur_date, 'target_groups', target_groups)
+
+        for target_group in target_groups['TargetGroups']:
+            _save_object(customer, cur_date, 'target_group', target_group)
     except Exception as e:
         print(f'Failed to get target groups of customer {customer.name}')
         print(e)
+
+def _get_autoscaling(customer):
+    client = get_client(customer, 'autoscaling')
+
+    try:
+        as_groups = client.describe_auto_scaling_groups()
+        if verbosity >= VERBOSE:
+            print(as_groups)
+
+        _save_object(customer, cur_date, 'auto_scaling_groups', as_groups)
+
+        for as_group in as_groups['AutoScalingGroups']:
+            _save_object(customer, cur_date, 'auto_scaling_group', as_group)
+
+        launch_configs = client.describe_launch_configurations()
+        if verbosity >= VERBOSE:
+            print(launch_configs)
+
+        _save_object(customer, cur_date, 'launch_configurations', launch_configs)
+
+        for launch_config in launch_configs['LaunchConfigurations']:
+            _save_object(customer, cur_date, 'launch_configuration', launch_config)
+    except Exception as e:
+        print(f'Failed to get autoscaling groups of customer {customer.name}')
+        print(e)
+
+def _get_cloudfront(customer):
+    client = get_client(customer, 'cloudfront')
+
+    try:
+        distributions = client.list_distributions()
+        if verbosity >= VERBOSE:
+            print(distributions)
+
+        _save_object(customer, cur_date, 'distributions', distributions)
+
+        for distribution in distributions['DistributionList']['Items']:
+            _save_object(customer, cur_date, 'distribution', distribution)
+    except Exception as e:
+        print(f'Failed to get cloudfront distribution of customer {customer.name}')
+        print(e)
+
+
+def _save_object(customer, date, object_type, object_value):
+    infra_object = Infrastructure(
+        customer=customer,
+        date=date,
+        object_type=object_type,
+        object_value=object_value
+    )
+    infra_object.save()
