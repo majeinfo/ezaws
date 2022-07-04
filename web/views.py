@@ -555,6 +555,47 @@ def get_s3(request, cust_name):
     return render(request, 's3.html', {'current': cust_name, 'names': names, 'bucketlist': bucketlist, 'price': price })
 
 
+@login_required
+@user_is_owner
+@aws_creds_defined
+def get_cloudfront(request, cust_name):
+    names = utils.get_customers()
+    customer = utils.get_customer(cust_name)
+    client = utils.get_client(customer, 'cloudfront')
+    session = utils.get_session(customer)
+
+    distributionlist = []
+    context = {'current': cust_name, 'names': names, 'distributions': distributionlist}
+
+    try:
+        distributions = client.list_distributions()
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'distributions.html', context)
+
+    try:
+        if 'Items' in distributions['DistributionList']:
+            for distribution in distributions['DistributionList']['Items']:
+                print(distribution)
+                aliases = []
+                if 'Aliases' in distribution and 'Items' in distribution['Aliases']:
+                    aliases = distribution['Aliases']['Items']
+
+                distributionlist.append({
+                    'id': distribution['Id'],
+                    'domain_name': distribution['DomainName'],
+                    'enabled': distribution['Enabled'],
+                    'aliases': aliases,
+                })
+    except Exception as e:
+        messages.error(request, e)
+        utils.check_perm_message(request, cust_name)
+        return render(request, 'distributions.html', context)
+
+    return render(request, 'distributions.html', context)
+
+
 def _is_elastic_ip(ips, public_ip):
     if not 'Addresses' in ips: return False
     for ip in ips['Addresses']:

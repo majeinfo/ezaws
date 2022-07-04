@@ -91,6 +91,7 @@
             <li><a style="color:#999999;" onclick="show_elbs()">ELB</a></li>
             <li><a style="color:#999999;" onclick="show_elasticache()">ElastiCache</a></li>
             <li><a style="color:#999999;" onclick="show_s3()">S3</a></li>
+            <li><a style="color:#999999;" onclick="show_cloudfront()">CloudFront</a></li>
             <li><a style="color:#999999;" onclick="start_audit()">Run Audit</a></li>
             <li><a style="color:#999999;" onclick="view_audit_reports()">View Audit Reports</a></li>
             {% endif %}
@@ -203,6 +204,11 @@ function show_elasticache() {
 function show_s3() {
     var cust_name = get_cust_name();
     window.location = '/web/get_s3/' + cust_name;
+}
+
+function show_cloudfront() {
+    var cust_name = get_cust_name();
+    window.location = '/web/get_cloudfront/' + cust_name;
 }
 
 function start_audit() {

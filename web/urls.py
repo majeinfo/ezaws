@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^get_elbs/(?P<cust_name>.*)', views.get_elbs, name='get_elbs'),
     url(r'^get_elasticache/(?P<cust_name>.*)', views.get_elasticache, name='get_elasticache'),
     url(r'^get_s3/(?P<cust_name>.*)', views.get_s3, name='get_s3'),
+    url(r'^get_cloudfront/(?P<cust_name>.*)', views.get_cloudfront, name='get_cloudfront'),
     url(r'^audit/(?P<cust_name>.*)', audit.auditAction, name='audit_action'),
     url(r'^view_audit_reports/(?P<cust_name>.*)', audit.viewAuditReportsAction, name='view_audit_reports_action'),
     url(r'^view_audit_report/(?P<cust_name>[^/]+)/(?P<report_name>[^/]+)', audit.viewAuditReportAction, name='view_audit_report_action'),

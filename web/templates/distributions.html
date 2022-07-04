@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "CloudFront Distributions" %}{% endblock %}
+
+{% block content %}
+<h2>
+  <button class="btn btn-primary btn-lg" type="button">Distribution List <span class="badge badge-light"><b>{{ distributions|length }}</b></span></button>
+</h2>
+
+<table class="table table-hover">
+  <thead><tr><td>Name</td><td>ID</td><td>Enabled</td><td>CNAME Aliases</td></tr></thead>
+  <tbody class="table-striped">
+  {% for distrib in distributions %}
+  <tr>
+    <td><h5><span class="badge badge-dark">{{ distrib.domain_name }}</span></h5></td>
+    <td><span class="badge badge-primary">{{ distrib.id }}</span></td>
+    <td><span class="badge badge-success">{{ distrib.enabled }}</span></td>
+    <td>
+      <span>
+        {% for alias in distrib.aliases %}
+          {{ alias }}
+        {% endfor %}
+      </span>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
