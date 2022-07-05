@@ -219,8 +219,9 @@ def _get_cloudfront(customer):
 
         _save_object(customer, cur_date, 'distributions', distributions)
 
-        for distribution in distributions['DistributionList']['Items']:
-            _save_object(customer, cur_date, 'distribution', distribution)
+        if 'Items' in distributions['DistributionList']:
+            for distribution in distributions['DistributionList']['Items']:
+                _save_object(customer, cur_date, 'distribution', distribution)
     except Exception as e:
         print(f'Failed to get cloudfront distribution of customer {customer.name}')
         print(e)

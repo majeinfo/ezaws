@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -179,7 +180,13 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'general' : {
@@ -190,6 +197,11 @@ LOGGING = {
         'pricing' : {
             'handlers': ['pricing_logfile'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'commands': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
         'django.request': {
