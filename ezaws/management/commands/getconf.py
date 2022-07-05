@@ -2,7 +2,7 @@ import json
 import logging
 from django.utils import timezone
 from django.core.management.base import BaseCommand
-from web.models import Customer, Infrastructure
+from web.models import Infrastructure, InfraCollected
 from web.utils import get_customers, get_customer, get_client, get_session
 
 std_logger = logging.getLogger('commands')
@@ -37,6 +37,8 @@ class Command(BaseCommand):
 def _get_infrastructure(customer):
     global cur_date
     cur_date = timezone.now()
+    infra_collected = InfraCollected(customer=customer, date=cur_date)
+    infra_collected.save()
 
     _get_instances(customer)
     _get_security_groups(customer)

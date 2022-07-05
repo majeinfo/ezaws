@@ -29,6 +29,14 @@ class Infrastructure(models.Model):
         ordering = ["customer", "date", "object_type"]
 
 
+class InfraCollected(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    date = models.DateTimeField('collect date')
+
+    class Meta:
+        ordering = ["customer", "date"]
+
+
 class AuditEntry(models.Model):
     action = models.CharField(max_length=64)
     ip = models.GenericIPAddressField(null=True)
