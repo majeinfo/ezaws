@@ -45,6 +45,9 @@ class Command(BaseCommand):
         source_account = options["source_account"]
         target_account = options.get("target_account", "MAJE")
 
+        if verbosity >= VERBOSE:
+            std_logger.setLevel(logging.DEBUG)
+
         try:
             src_customer = get_customer(source_account)
         except Exception as e:
