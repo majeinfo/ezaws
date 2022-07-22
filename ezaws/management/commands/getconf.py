@@ -49,6 +49,7 @@ def _get_infrastructure(customer):
     _get_target_groups(customer)
     _get_autoscaling(customer)
     _get_cloudfront(customer)
+    _get_route53(customer)
     # S3 bucket
     # SNS
     # SQS
@@ -220,9 +221,27 @@ def _get_cloudfront(customer):
         std_logger.error(f'Failed to get cloudfront distribution of customer {customer.name}')
         std_logger.error(e)
 
+def _get_route53(customer):
+    client = get_client(customer, 'route53')
 
+    try:
+        # TODO: limited to 100
+        hosted_zones = client.list_hosted_zones()
+        std_logger.debug(hosted_zones)
+
+        _save_object(customer, cur_date, 'hosted_zones', hosted_zones)
+
+        for hosted_zone in hosted_zones['HostedZones']:
+            zone = client.get_hosted_zone(Id=hosted_zone['Id'])
+            _save_object(customer, cur_date, 'hosted_zone', zone)
+
+            rrset = client.list_resource_record_sets(HostedZoneId=hosted_zone['Id'])
+            _save_object(customer, cur_date, 'rrset', rrset)
+    except Exception as e:
+        std_logger.error(f'Failed to get hosted zones of customer {customer.name}')
+        std_logger.error(e)
+    
 def _save_object(customer, date, object_type, object_value):
-    return
     infra_object = Infrastructure(
         customer=customer,
         date=date,
