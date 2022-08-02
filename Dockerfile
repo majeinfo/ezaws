@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.9
 LABEL maintainer="jd@maje.biz"
 ARG target_dir=/appli
 ADD requirements.txt ${target_dir}/
