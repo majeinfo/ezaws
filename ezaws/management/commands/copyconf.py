@@ -33,10 +33,15 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
+        '''
+        Note: la région est associée au compte. Si on veut copier dans une nouvelle région
+              il faut créer un nouveau compte dans l'outil
+        '''
         parser.add_argument("--source-account", nargs='?')
         parser.add_argument("--from-version", nargs='?', default='latest', required=False)
         parser.add_argument("--target-account", nargs='?', default="MAJE", required=False)
         parser.add_argument("--object-type", nargs='?', default="all", required=False)
+        parser.add_argument("--object-id", nargs='?', default=ALL, required=False)
 
     def handle(self, *args, **options):
         global verbosity
