@@ -8,4 +8,6 @@ RUN cd ${target_dir} && git clone https://github.com/majeinfo/ezaws.git
 #RUN apt-get autoremove gcc git -y
 EXPOSE 8000
 WORKDIR ${target_dir}/ezaws
-CMD [ "/usr/local/bin/python", "manage.py", "runserver", "0.0.0.0:8000" ]
+
+# The --insecure option makes Django serves the static files
+CMD [ "/usr/local/bin/python", "manage.py", "runserver", "0.0.0.0:8000", "--insecure"]
