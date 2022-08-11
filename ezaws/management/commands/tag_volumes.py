@@ -27,8 +27,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         '''
-        Note: la région est associée au compte. Si on veut copier dans une nouvelle région
-              il faut créer un nouveau compte dans l'outil
+        Note: the AWS Region is attached in the DB with the customer account. If you want to
+              create resources in another Region, you must define another account
         '''
         parser.add_argument("--target-account", nargs='?', default="MAJE", required=False)
         parser.add_argument("--system-tag", nargs='?', default='SYSDISK', required=False)
@@ -109,6 +109,7 @@ class Command(BaseCommand):
                 if tag['Key'] == system_tag:
                     instance_type = instance['InstanceType']
                     tags.append({'Key': 'InstanceType', 'Value': instance_type})
+                    tags.append({'Key': 'AvailabilityZone', 'Value': instance['Placement']['AvailabilityZone']})
 
                     if 'IamInstanceProfile' in instance:
                         iam_profile_arn = instance['IamInstanceProfile']['Arn']

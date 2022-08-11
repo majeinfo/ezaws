@@ -55,7 +55,7 @@ class Command(BaseCommand):
             self.dst_customer = get_customer(target_account)
             az = options.get("az", "")
             if not az:
-                az = self.dst_customer.region + "a"
+                az = self.dst_customer.region
         except Exception as e:
             std_logger.error(f"The target account {target_account} does not exist")
             return
@@ -64,7 +64,6 @@ class Command(BaseCommand):
             instance_name = instance_name.upper()
             snapshots = self._find_instance_snapshots(instance_name)
             self._recreate_instance(instance_name, snapshots, az, key_pair_name)
-            self._recreate_volumes(instance_name, snapshots, az)
         except Exception as e:
             std_logger.error(f"Re-creation of instance {instance_name} failed:")
             std_logger.error(e)
@@ -85,6 +84,9 @@ class Command(BaseCommand):
             snapshots = client.describe_snapshots(MaxResults=200, OwnerIds=[self.dst_customer.owner_id])
         except Exception as e:
             raise Exception(f"Could not retrieve snapshots description {e}")
+
+        if 'NextToken' in snapshots:
+            std_logger.info("MaxResults is too low for describe_snpashots")
 
         found_snapshots = {}
         for snapshot in snapshots['Snapshots']:
@@ -124,6 +126,20 @@ class Command(BaseCommand):
 
             return None
 
+        def _get_instance_type(snapshot):
+            for tag in snapshot['Tags']:
+                if tag['Key'] == 'InstanceType':
+                    return tag['Value']
+
+            return None
+
+        def _get_instance_az(snapshot):
+            for tag in snapshot['Tags']:
+                if tag['Key'] == 'AvailabilityZone':
+                    return tag['Value']
+
+            return None
+
         # Check we found a snapshot for the system
         std_logger.info(f"Try to recreate instance {instance_name} from its snapshots...")
         if instance_name not in snapshots:
@@ -137,6 +153,14 @@ class Command(BaseCommand):
         sys_disk_name = _get_sys_disk_name(snapshot)
         if sys_disk_name is None:
             raise Exception(f"Snapshot {snapshot['SnapshotId']} has no SYSDISKNAME tag")
+
+        instance_type = _get_instance_type(snapshot)
+        if instance_type is None:
+            raise Exception(f"Snapshot {snapshot['SnapshotId']} has no InstanceType tag")
+
+        availability_zone = _get_instance_az(snapshot)
+        if availability_zone is None:
+            raise Exception(f"Snapshot {snapshot['SnapshotId']} has no AvailabilityZone tag")
 
         std_logger.info(f"Create AMI from snapshot {snapshot}")
         client = get_client(self.dst_customer, 'ec2')
@@ -166,8 +190,8 @@ class Command(BaseCommand):
             ImageId=ami['ImageId'],
             MinCount=1,
             MaxCount=1,
-            InstanceType="t2.micro",    # TODO: should be the same as the original
-            Placement={'AvailabilityZone': az},
+            InstanceType=instance_type,
+            Placement={'AvailabilityZone': az + availability_zone[-1]}, # TODO: suppose que la destination a autant de AZ que l'original
             SecurityGroups=[],          # TODO: fill in
             KeyName=key_pair_name,
             TagSpecifications=[
@@ -176,6 +200,8 @@ class Command(BaseCommand):
         )
         # TODO: il manque les rôles et la conf réseau (private+public+EIP)
         std_logger.info(f"Instance {instances['Instances'][0]['InstanceId']} created")
+
+        self._recreate_volumes(instance_name, snapshots, az + availability_zone[-1])
 
 
     def _recreate_volumes(self, instance_name, snapshots, az):
