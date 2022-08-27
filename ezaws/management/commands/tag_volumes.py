@@ -1,8 +1,14 @@
+'''
+Example of use:
+$ ./tag_volumes.py --profile name --region eu-west-1 --system-tag SYSDISK --volume-tag MUSTSNAP
+
+This script must be launched by the Account that must be restored in another account.
+'''
 import logging
 
-MAX_RESULTS = 5
+MAX_RESULTS = 200
 
-std_logger = logging.getLogger('commands')
+logger = logging.getLogger('commands')
 
 
 def tag_volumes(client, system_tag, volume_tag):
@@ -11,6 +17,7 @@ def tag_volumes(client, system_tag, volume_tag):
     :param client: boto3 client
     :param system_tag str: value of the Tag used to mark system disks
     :param volume_tag str: value of the Tag used to mark a disk to be tagged
+    :return dict: return the count of instances and volumes examined and tagged
     '''
 
     # Find all instances (handle the native pagination) and build
@@ -31,10 +38,14 @@ def tag_volumes(client, system_tag, volume_tag):
             raise Exception(f"Could not retrieve instances description {e}")
 
         if 'NextToken' in instances_slice:
-            std_logger.info("MaxResults is too low for describe_instances, go on with next_token...")
+            logger.info("MaxResults is too low for describe_instances, go on with next_token...")
             next_token = instances_slice['NextToken']
         else:
             break
+
+    logger.debug('List of found instances:')
+    logger.debug(list(instance_ids.keys()))
+    instances_count = len(instance_ids.keys())
 
     # Find all the volumes that must be snapshotted
     volumes = []
@@ -51,22 +62,26 @@ def tag_volumes(client, system_tag, volume_tag):
             raise Exception(f"Could not retrieve volumes description {e}")
 
         if 'NextToken' in volumes_slice:
-            std_logger.info("MaxResults is too low for describe_volumes, go on with next_token...")
+            logger.info("MaxResults is too low for describe_volumes, go on with next_token...")
             next_token = volumes_slice['NextToken']
         else:
             break
 
+    logger.debug(f'List of Volumes that have the {volume_tag} Tag:')
+    logger.debug(volumes)
+    volumes_count = len(volumes)
+
     for volume in volumes:
         # Add a tag with attachment info
-        #print(volume)
+        logger.debug(f"Handling Volume {volume['VolumeId']}")
         attachments = volume['Attachments']
 
         # TODO: handle only ONE attachment
         if len(attachments) > 1:
-            std_logger.info(f"Volume {volume['VolumeId']} is multi-attached. Only the first attachment will be managed")
+            logger.info(f"Volume {volume['VolumeId']} is multi-attached. Only the first attachment will be managed")
 
         if not len(attachments) or attachments[0]['State'] != 'attached':
-            std_logger.info(f"Volume {volume['VolumeId']} is not attached")
+            logger.info(f"Volume {volume['VolumeId']} is not attached")
             continue
 
         instance_id = attachments[0]['InstanceId']
@@ -85,6 +100,7 @@ def tag_volumes(client, system_tag, volume_tag):
         # Test if volume is a SYSDISK volume
         for tag in volume['Tags']:
             if tag['Key'] == system_tag:
+                logger.debug('This Volume is a System Volume')
                 instance_type = instance['InstanceType']
                 tags.append({'Key': 'InstanceType', 'Value': instance_type})
                 tags.append({'Key': 'AvailabilityZone', 'Value': instance['Placement']['AvailabilityZone']})
@@ -100,6 +116,9 @@ def tag_volumes(client, system_tag, volume_tag):
                 break
 
         client.create_tags(Resources=[volume_id], Tags=tags)
+        logger.debug(f"Volume {volume_id} tagged")
+
+    return {"instances_count": instances_count, "volumes_count": volumes_count}
 
 
 def _get_instance_from_id(volume_id, instance_id, instance):
@@ -123,14 +142,26 @@ if __name__ == '__main__':
     from optparse import OptionParser
     import boto3
 
-    usage = "%prog [--region=REGION] [--system-tag=SYSDISK] [--volume-tag=MUSTSNAP]"
+    usage = "%prog [-p|--profile name] [-r|--region=REGION] [-s|--system-tag=SYSDISK] [-t|--volume-tag=MUSTSNAP] [-v|--verbose]"
 
     parser = OptionParser(usage=usage, version="1.0")
+    parser.add_option("-p", "--profile", dest="profile_name", help="Name of profile in .aws/config or .aws/credentials")
     parser.add_option("-r", "--region", dest="region", help="Region where the EBS are located", default=None)
     parser.add_option("-s", "--system-tag", dest="system_tag", help="Name of the Tag put on System Disk", default="SYSDISK")
-    parser.add_option("-v", "--volume-tag", dest="volume_tag", help="Name of the Tag put on an EBS that must ne snapshotted", default="MUSTSNAP")
+    parser.add_option("-t", "--volume-tag", dest="volume_tag", help="Name of the Tag put on an EBS that must ne snapshotted", default="MUSTSNAP")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Debug mode", default=False)
     (opts,args) = parser.parse_args()
 
-    client = boto3.client("ec2", region_name=opts.region)
-    tag_volumes(client, opts.system_tag, opts.volume_tag)
+    if opts.verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+    logger.addHandler(logging.StreamHandler())
+
+    session = boto3.Session(profile_name=opts.profile_name) if opts.profile_name else boto3.Session()
+    client =  session.client('ec2', region_name=opts.region) if opts.region else session.client('ec2')
+
+    result = tag_volumes(client, opts.system_tag, opts.volume_tag)
+    logger.info(f"{result['instances_count']} Instances examined and {result['volumes_count']} Volumes tagged")
 
