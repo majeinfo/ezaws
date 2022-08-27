@@ -14,6 +14,8 @@ import aws.definitions as awsdef
 from . import checks as ck
 from .decorators import user_is_owner, console_defined, aws_creds_defined
 
+MAX_RESULTS = 200
+
 std_logger = logging.getLogger('general')
 
 
@@ -241,7 +243,6 @@ def get_volumes(request, cust_name):
     return render(request, 'volumes.html', context)
 
 
-# TODO: use the Paginator with the Snapshots
 @login_required
 @user_is_owner
 @aws_creds_defined
@@ -257,14 +258,25 @@ def get_snapshots(request, cust_name):
                 'total_max_size': 0, 'total_max_price': 0,
                 'total_min_size': 0, 'total_min_price': 0 }
 
-    try:
-        response = client.describe_snapshots(OwnerIds=[customer.owner_id])
-    except Exception as e:
-        messages.error(request, e)
-        utils.check_perm_message(request, cust_name)
-        return render(request, 'snapshots.html', context)
+    snapshot_list = []
+    next_token = None
+    while True:
+        try:
+            if next_token is None:
+                response = client.describe_snapshots(OwnerIds=[customer.owner_id], MaxResults=MAX_RESULTS)
+            else:
+                response = client.describe_snapshots(OwnerIds=[customer.owner_id], MaxResults=MAX_RESULTS, NextToken=next_token)
 
-    snapshot_list = response['Snapshots']
+            snapshot_list += response['Snapshots']
+        except Exception as e:
+            messages.error(request, e)
+            utils.check_perm_message(request, cust_name)
+            return render(request, 'snapshots.html', context)
+
+        if 'NextToken' in response:
+            next_token = response['NextToken']
+        else:
+            break
 
     for snap in snapshot_list:
         snaplist.append(snap)

@@ -18,7 +18,7 @@
         <tr>
             <td><span class="badge badge-dark">{{ snap.SnapshotId }}</span></td>
             <!-- <td>{{ snap.State }}</td> -->
-            <td><span class="badge badge-success">{{ snap.StartTime }}</span></td>
+            <td><span class="badge badge-success">{{ snap.StartTime|date:"Y/m/d H:m" }}</span></td>
             <td><span class="badge badge-primary">{{ snap.VolumeId }}</span></td>
             <td><span class="badge badge-info">{{ snap.VolumeSize }} GiB</span></td>
         </tr>
