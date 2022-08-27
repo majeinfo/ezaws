@@ -139,18 +139,21 @@ def _linearize(security_groups):
 
 if __name__ == '__main__':
     # standalone & batch mode
-    from optparse import OptionParser
+    import argparse
     import boto3
 
     usage = "%prog [-p|--profile name] [-r|--region=REGION] [-s|--system-tag=SYSDISK] [-t|--volume-tag=MUSTSNAP] [-v|--verbose]"
 
-    parser = OptionParser(usage=usage, version="1.0")
-    parser.add_option("-p", "--profile", dest="profile_name", help="Name of profile in .aws/config or .aws/credentials")
-    parser.add_option("-r", "--region", dest="region", help="Region where the EBS are located", default=None)
-    parser.add_option("-s", "--system-tag", dest="system_tag", help="Name of the Tag put on System Disk", default="SYSDISK")
-    parser.add_option("-t", "--volume-tag", dest="volume_tag", help="Name of the Tag put on an EBS that must ne snapshotted", default="MUSTSNAP")
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Debug mode", default=False)
-    (opts,args) = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description="Add semantic Tags to marker Volumes",
+        usage=usage
+    )
+    parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config or .aws/credentials")
+    parser.add_argument("-r", "--region", nargs='?', help="Region where the EBS are located", default=None)
+    parser.add_argument("-s", "--system-tag", nargs='?', help="Name of the Tag put on System Disk", default="SYSDISK")
+    parser.add_argument("-t", "--volume-tag", nargs='?', help="Name of the Tag put on an EBS that must ne snapshotted", default="MUSTSNAP")
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", help="Debug mode", default=False)
+    opts = parser.parse_args()
 
     if opts.verbose:
         logger.setLevel(logging.DEBUG)
@@ -159,7 +162,7 @@ if __name__ == '__main__':
 
     logger.addHandler(logging.StreamHandler())
 
-    session = boto3.Session(profile_name=opts.profile_name) if opts.profile_name else boto3.Session()
+    session = boto3.Session(profile_name=opts.profile) if opts.profile else boto3.Session()
     client =  session.client('ec2', region_name=opts.region) if opts.region else session.client('ec2')
 
     result = tag_volumes(client, opts.system_tag, opts.volume_tag)
