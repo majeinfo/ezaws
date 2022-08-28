@@ -116,7 +116,7 @@ if __name__ == '__main__':
     import argparse
     import boto3
 
-    usage = "%prog --src-profile name [--src-region=REGION] --dst-profile name [--dst-region=REGION] [-v|--verbose]"
+    usage = "%(prog)s --src-profile name [--src-region=REGION] --dst-profile name [--dst-region=REGION] [-v|--verbose]"
 
     parser = argparse.ArgumentParser(
         description="Copy Snapshots from a source account to a destination account and preserve the tags",

@@ -142,7 +142,7 @@ if __name__ == '__main__':
     import argparse
     import boto3
 
-    usage = "%prog [-p|--profile name] [-r|--region=REGION] [-s|--system-tag=SYSDISK] [-t|--volume-tag=MUSTSNAP] [-v|--verbose]"
+    usage = "%(prog)s [-p|--profile name] [-r|--region=REGION] [-s|--system-tag=SYSDISK] [-t|--volume-tag=MUSTSNAP] [-v|--verbose]"
 
     parser = argparse.ArgumentParser(
         description="Add semantic Tags to marker Volumes",
