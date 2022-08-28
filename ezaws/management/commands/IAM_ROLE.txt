@@ -5,12 +5,16 @@ Some permissions are needed for (mainly) writing objects in the Destination Acco
 Permissions can be given using an IAM User and his/her keys or by giving an IAM Role to an EC2 instance.
 
 1.Permissions needed for reading objects or create Tags in the Source Account
-ec2:DescribeInstances
-ec2:DescribeVolumes
+ec2:DescribeInstances (Resource: "*")
+ec2:DescribeVolumes (Resource: "*")
 ec2:CreateTags (Resource: "arn:aws:ec2:*:<Source_Account_ID>:volume/*")
+ec2:DescribeSnapshots (Resource: "*")
 
 2.Permissions needed for the Destination Account
-ec2:DescribeSnapshots
+ec2:DescribeSnapshots (Resource: "*")
 ec2:CreateTags (Resource": "arn:aws:ec2:*::snapshot/*")
-ec2:CopySnapshots
+ec2:CreateTags (Resource "arn:aws:ec2:*::instance/*")
+ec2:CopySnapshots (Resource": "arn:aws:ec2:*::snapshot/*")
+ec2:RegisterImage (Resource: "*")
+ec2:RunInstances (Resource: "*")
 
