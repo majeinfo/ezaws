@@ -35,7 +35,17 @@ def get_snapshots(account_id, dst_client, src_ec2):
 
         for snapshot in snapshots['Snapshots']:
             logger.debug(f"Analysis of snapshot {snapshot['SnapshotId']}")
+            logger.debug(f"{snapshot}")
+
+            # StartTime must be the today date
+            start_time = snapshot['StartTime']
+            if today.year != start_time.year or today.month != start_time.month or today.day != start_time.day:
+                logger.debug(f"{snapshot['SnapshotId']} skipped because of wrong date")
+                continue
+
             snapshot_ori = src_ec2.Snapshot(snapshot['SnapshotId'])
+
+            # Compute tags that must be copied
             ori_tags = []
             if snapshot_ori.tags:
                 for tag in snapshot_ori.tags:
@@ -44,12 +54,6 @@ def get_snapshots(account_id, dst_client, src_ec2):
                         continue
 
                     ori_tags.append(tag)
-
-            # StartTime must be the today date
-            start_time = snapshot['StartTime']
-            if today.year != start_time.year or today.month != start_time.month or today.day != start_time.day:
-                logger.debug(f"{snapshot['SnapshotId']} skipped because of wrong date")
-                continue
 
             snapshots_to_be_copied.append({
                 'SnapshotId': snapshot['SnapshotId'],
@@ -76,6 +80,7 @@ def copy_snapshots(dst_client, dst_ec2, snapshot, src_region, dst_region):
     :return:
     '''
     logger.info(f"New snapshot Id: {snapshot['SnapshotId']} must be created from region {src_region} to region {dst_region}")
+    logger.debug(f"Original tags are {snapshot['Tags']}")
 
     try:
         res = dst_client.copy_snapshot(
@@ -144,7 +149,7 @@ if __name__ == '__main__':
 
     dst_client2 =  dst_session2.client('ec2')
 
-    src_ec2 = dst_session1.resource('ec2', region_name=src_session.region_name)
+    src_ec2 = src_session.resource('ec2', region_name=src_session.region_name)  # Needed to read the snapshot Tags with the source account
     dst_ec2 = dst_session1.resource('ec2', region_name=dst_session2.region_name)
 
     account_id = src_session.client('sts').get_caller_identity().get('Account')
