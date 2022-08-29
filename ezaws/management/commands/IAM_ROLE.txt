@@ -16,5 +16,7 @@ ec2:CreateTags (Resource": "arn:aws:ec2:*::snapshot/*")
 ec2:CreateTags (Resource "arn:aws:ec2:*::instance/*")
 ec2:CopySnapshots (Resource": "arn:aws:ec2:*::snapshot/*")
 ec2:RegisterImage (Resource: "*")
+ec2:DescribeImages (Resource: "*")
+ec2:DeregisterImage (Resource: "*")
 ec2:RunInstances (Resource: "*")
 

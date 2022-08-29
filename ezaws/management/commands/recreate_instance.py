@@ -76,77 +76,56 @@ def find_instance_snapshots(client, account_id, instance_name):
     return found_snapshots
 
 
-def recreate_instance(client, instance_name, snapshots, region, subnet_id):
-    def _is_sys_disk(snapshot):
-        for tag in snapshot['Tags']:
-            if tag['Key'] == 'SYSDISK':
-                return True
-
-        return False
-
-    def _get_device_name(snapshot):
-        for tag in snapshot['Tags']:
-            if tag['Key'] == 'Device':
-                return tag['Value']
-
-        return None
-
-    def _get_instance_type(snapshot):
-        for tag in snapshot['Tags']:
-            if tag['Key'] == 'InstanceType':
-                return tag['Value']
-
-        return None
-
-    def _get_instance_az(snapshot):
-        for tag in snapshot['Tags']:
-            if tag['Key'] == 'AvailabilityZone':
-                return tag['Value']
-
-        return None
-
+def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami, region, subnet_id):
     # Check if we found a snapshot for the system
     logger.info(f"Try to recreate instance {instance_name} from its snapshots...")
     if instance_name not in snapshots:
         raise Exception(f"No system snapshot found for instance {instance_name}")
 
     snapshot = snapshots[instance_name]
-    if not _is_sys_disk(snapshot):
-        raise Exception(f"Snapshot {snapshot['SnapshotId']} is not a snapshot of a SYSDISK")
 
-    device_name = _get_device_name(snapshot)
-    if device_name is None:
-        raise Exception(f"Snapshot {snapshot['SnapshotId']} has no Device tag")
+    is_sys_disk = _get_tag_value(snapshot, 'SYSDISK')
+    device_name = _get_tag_value(snapshot, 'Device')
+    instance_type = _get_tag_value(snapshot, 'InstanceType')
+    availability_zone = _get_tag_value(snapshot, 'AvailabilityZone')
+    architecture = _get_tag_value(snapshot, 'Architecture')
 
-    instance_type = _get_instance_type(snapshot)
-    if instance_type is None:
-        raise Exception(f"Snapshot {snapshot['SnapshotId']} has no InstanceType tag")
-
-    availability_zone = _get_instance_az(snapshot)
-    if availability_zone is None:
-        raise Exception(f"Snapshot {snapshot['SnapshotId']} has no AvailabilityZone tag")
-
-    logger.info(f"Create AMI from snapshot {snapshot}")
-    ami = client.register_image(
-        Architecture='x86_64',  # TODO: should be read from a snapshot tag
-        BlockDeviceMappings=[
-            {
-                'DeviceName': device_name,
-                'Ebs': {
-                    #'DeleteOnTermination': True,
-                    'SnapshotId': snapshot['SnapshotId'],
-                    #'VolumeSize': 20,
-                    #'VolumeType': 'gp2'
-                }
-            },
-        ],
-        #EnaSupport=True,   # TODO: ????
-        Description=f"AMI created from Snapshot {snapshot['SnapshotId']}",
-        Name=instance_name,
-        RootDeviceName=device_name,
-        VirtualizationType='hvm'
+    # Check if a new AMI must be created
+    ami = client.describe_images(
+        Filters=[{'Name': 'name', 'Values': [instance_name]}],
+        Owners=[account_id]
     )
-    logger.info(f"AMI {ami['ImageId']} created")
+
+    # Delete existing AMI if needed
+    if len(ami['Images']) and recreate_ami:
+        client.deregister_image(ImageId=ami['Images'][0]['ImageId'])
+
+    # Create a new AMI if required
+    if len(ami['Images']) == 0 or recreate_ami:
+        logger.info(f"Create AMI from snapshot {snapshot}")
+        ami = client.register_image(
+            Architecture=architecture,
+            BlockDeviceMappings=[
+                {
+                    'DeviceName': device_name,
+                    'Ebs': {
+                        #'DeleteOnTermination': True,
+                        'SnapshotId': snapshot['SnapshotId'],
+                        #'VolumeSize': 20,
+                        #'VolumeType': 'gp2'
+                    }
+                },
+            ],
+            #EnaSupport=True,   # TODO: ????
+            Description=f"AMI created from Snapshot {snapshot['SnapshotId']}",
+            Name=instance_name,
+            RootDeviceName=device_name,
+            VirtualizationType='hvm'
+        )
+        logger.info(f"AMI {ami['ImageId']} created")
+    else:
+        ami = ami['Images'][0]
+        logger.info(f"AMI {ami['ImageId']} already exists and must not be recreated")
 
     # Create an instance from the AMI
     if subnet_id:   # needed for EC2-Classis
@@ -204,12 +183,20 @@ def _recreate_volumes(client, instance_name, snapshots, az):
         )
 
 
+def _get_tag_value(snapshot, tag_name):
+    for tag in snapshot['Tags']:
+        if tag['Key'] == tag_name:
+            return tag['Value']
+
+    raise Exception(f"Snapshot {snapshot['SnapshotId']} has no {tag_name} tag")
+
+
 if __name__ == '__main__':
     # standalone & batch mode
     import argparse
     import boto3
 
-    usage = "%(prog)s --instance-name name [--profile profile_name] [--region region] [-s|--subnet-id subnet] [-v|--verbose]"
+    usage = "%(prog)s --instance-name name [--profile profile_name] [--region region] [-s|--subnet-id subnet] [-a|--recreate-ami] [-v|--verbose]"
 
     parser = argparse.ArgumentParser(
         description="Recreate an instance from the snapshoted volumes",
@@ -217,8 +204,8 @@ if __name__ == '__main__':
     )
     parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config or .aws/credentials", required=True)
     parser.add_argument("-r", "--region", nargs='?', help="Name of the Region where are the snapshots and the instances", required=True)
-    #parser.add_argument("-a", "--target-account", dest="target_account", help="Name of the AWS Account", required=True)
     parser.add_argument("-i", "--instance-name", nargs='?', help="Name of the Instance to recreate", required=True)
+    parser.add_argument("-a", "--recreate-ami", action="store_true", help="Recreate the AMI if it already exists", default=False)
     parser.add_argument("-s", "--subnet-id", nargs='?', help="Subnet ID", default=None)
     parser.add_argument("-v", "--verbose", action="store_true", help="Debug mode", default=False)
     opts = parser.parse_args()
@@ -238,5 +225,5 @@ if __name__ == '__main__':
 
     account_id = session.client('sts').get_caller_identity().get('Account')
     found_snapshots = find_instance_snapshots(client, account_id, opts.instance_name)
-    recreate_instance(client, opts.instance_name, found_snapshots, opts.region, opts.subnet_id)
+    recreate_instance(client, account_id, opts.instance_name, found_snapshots, opts.recreate_ami, opts.region, opts.subnet_id)
     logger.info("Instance recreated")
