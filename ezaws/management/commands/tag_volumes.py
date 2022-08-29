@@ -101,8 +101,8 @@ def tag_volumes(client, system_tag, volume_tag):
         for tag in volume['Tags']:
             if tag['Key'] == system_tag:
                 logger.debug('This Volume is a System Volume')
-                instance_type = instance['InstanceType']
-                tags.append({'Key': 'InstanceType', 'Value': instance_type})
+                tags.append({'Key': 'InstanceType', 'Value': instance['InstanceType']})
+                tags.append({'Key': 'Architecture', 'Value': instance['Architecture']})
                 tags.append({'Key': 'AvailabilityZone', 'Value': instance['Placement']['AvailabilityZone']})
 
                 if 'IamInstanceProfile' in instance:
