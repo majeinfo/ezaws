@@ -12,11 +12,25 @@ ec2:DescribeSnapshots (Resource: "*")
 
 2.Permissions needed for the Destination Account
 ec2:DescribeSnapshots (Resource: "*")
+ec2:CopySnapshots (Resource": "arn:aws:ec2:*::snapshot/*")
 ec2:CreateTags (Resource": "arn:aws:ec2:*::snapshot/*")
 ec2:CreateTags (Resource "arn:aws:ec2:*::instance/*")
-ec2:CopySnapshots (Resource": "arn:aws:ec2:*::snapshot/*")
+ec2:CreateTags (Resource "arn:aws:ec2:*::volume/*")
 ec2:RegisterImage (Resource: "*")
 ec2:DescribeImages (Resource: "*")
 ec2:DeregisterImage (Resource: "*")
 ec2:RunInstances (Resource: "*")
+ec2:CreateVolume (Resource: "*")
+
+3.Permissions needed to register & deregister instance in Target group
+elasticloadbalancing:DescribeLoadBalancers
+elasticloadbalancing:DescribeTargetHealth
+elasticloadbalancing:DescribeTargetGroups
+elasticloadbalancing:RegisterTargets (Resource: arn:aws:elasticloadbalancing:*:357156346524:targetgroup/*/*)
+elasticloadbalancing:DeregisterTargets (Resource: arn:aws:elasticloadbalancing:*:357156346524:targetgroup/*/*)
+
+4.Permissions to change the instance type
+ec2:StopInstances
+ec2:StartInstances
+ec2:ModifyInstanceAttribute
 

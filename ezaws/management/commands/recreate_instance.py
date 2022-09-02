@@ -135,13 +135,15 @@ def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami
             MinCount=1,
             MaxCount=1,
             InstanceType=instance_type,
-            #Placement={'AvailabilityZone': az + availability_zone[-1]},
-            SubnetId=subnet_id,
+            SubnetId=subnet_id,         # imply the AZ
             SecurityGroups=[],          # TODO: to be filled in
             TagSpecifications=[
                 {'ResourceType': 'instance', 'Tags': [{'Key': 'Name', 'Value': instance_name}]}
             ]
         )
+
+        # Must find the Region from the subnet-id
+        region = instances['Instances'][0]['Placement']['AvailabilityZone'][:-1]
     else:
         instances = client.run_instances(
             # TODO: BlockDeviceMappings (rend inutile la création des Volumes dans la fonction suivante)
@@ -149,7 +151,7 @@ def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami
             MinCount=1,
             MaxCount=1,
             InstanceType=instance_type,
-            Placement={'AvailabilityZone': region + availability_zone[-1]}, # TODO: suppose que la destination a autant de AZ que l'original
+            Placement={'AvailabilityZone': region + availability_zone[-1]}, # TODO: the dest region must have enough AZ !
             SecurityGroups=[],          # TODO: to be filled in
             TagSpecifications=[
                 {'ResourceType': 'instance', 'Tags': [{'Key': 'Name', 'Value': instance_name}]}
