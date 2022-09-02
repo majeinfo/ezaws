@@ -1,6 +1,6 @@
 '''
 Example of use:
-$ ./recreate_instance.py --instance-name MASTER --profile DFI-BKP --subnet-id xyz --verbosity 2
+$ ./recreate_instance.py --instance-name MASTER --profile DFI-BKP --subnet-id xyz -v
 
 This script must be launched in the target Account
 '''
@@ -88,6 +88,7 @@ def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami
     device_name = _get_tag_value(snapshot, 'Device')
     instance_type = _get_tag_value(snapshot, 'InstanceType')
     availability_zone = _get_tag_value(snapshot, 'AvailabilityZone')
+    ena_support = _get_tag_value(snapshot, 'EnaSupport') == "True"
     architecture = _get_tag_value(snapshot, 'Architecture')
 
     # Check if a new AMI must be created
@@ -116,7 +117,7 @@ def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami
                     }
                 },
             ],
-            #EnaSupport=True,   # TODO: ????
+            EnaSupport=ena_support,
             Description=f"AMI created from Snapshot {snapshot['SnapshotId']}",
             Name=instance_name,
             RootDeviceName=device_name,
@@ -198,13 +199,13 @@ if __name__ == '__main__':
     import argparse
     import boto3
 
-    usage = "%(prog)s --instance-name name [--profile profile_name] [--region region] [-s|--subnet-id subnet] [-a|--recreate-ami] [-v|--verbose]"
+    usage = "%(prog)s --instance-name name [--profile profile_name] --region region [-s|--subnet-id subnet] [-a|--recreate-ami] [-v|--verbose]"
 
     parser = argparse.ArgumentParser(
         description="Recreate an instance from the snapshoted volumes",
         usage=usage
     )
-    parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config or .aws/credentials", required=True)
+    parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config")
     parser.add_argument("-r", "--region", nargs='?', help="Name of the Region where are the snapshots and the instances", required=True)
     parser.add_argument("-i", "--instance-name", nargs='?', help="Name of the Instance to recreate", required=True)
     parser.add_argument("-a", "--recreate-ami", action="store_true", help="Recreate the AMI if it already exists", default=False)
