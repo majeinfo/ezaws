@@ -122,7 +122,7 @@ if __name__ == '__main__':
         description="Copy Snapshots from a source account to a destination account and preserve the tags",
         usage=usage
     )
-    parser.add_argument("--src-profile", nargs='?', help="Name of source profile in .aws/config or .aws/credentials", required=True)
+    parser.add_argument("--src-profile", nargs='?', help="Name of source profile in .aws/config", required=True)
     parser.add_argument("--src-region", nargs='?', help="Region where the source EBS are located", default=None)
     parser.add_argument("--dst-profile", nargs='?', help="Name of destination profile in .aws/config or .aws/credentials", required=True)
     parser.add_argument("--dst-region", nargs='?', help="Region where the destination EBS must be created", default=None)

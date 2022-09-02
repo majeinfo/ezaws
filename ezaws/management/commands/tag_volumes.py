@@ -148,7 +148,7 @@ if __name__ == '__main__':
         description="Add semantic Tags to marker Volumes",
         usage=usage
     )
-    parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config or .aws/credentials")
+    parser.add_argument("-p", "--profile", nargs='?', help="Name of profile in .aws/config")
     parser.add_argument("-r", "--region", nargs='?', help="Region where the EBS are located", default=None)
     parser.add_argument("-s", "--system-tag", nargs='?', help="Name of the Tag put on System Disk", default="SYSDISK")
     parser.add_argument("-t", "--volume-tag", nargs='?', help="Name of the Tag put on an EBS that must ne snapshotted", default="MUSTSNAP")
