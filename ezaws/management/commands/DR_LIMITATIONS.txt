@@ -1,0 +1,12 @@
+The scripts presented here should help to recreate some parts of an existing infrastructure
+from an AWS Regions to another one, using another AWS Account if necessary.
+
+The scripts are mainly base on copies of snapshots and recreation of EC2 instances usings
+semantic tags associated to the Snapshots.
+
+You must make sure that :
+
+1- the target Region has at least as many AZ as the original one
+
+2- if default limits of AWS resources usage have been increased in the original Region
+   make sure the same limits have been raised in the target Region
