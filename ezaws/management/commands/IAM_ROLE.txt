@@ -21,6 +21,9 @@ ec2:DescribeImages (Resource: "*")
 ec2:DeregisterImage (Resource: "*")
 ec2:RunInstances (Resource: "*")
 ec2:CreateVolume (Resource: "*")
+ec2:AttachVolume (Resource: "*")
+ec2:StopInstances
+ec2:StartInstances
 
 3.Permissions needed to register & deregister instance in Target group
 elasticloadbalancing:DescribeLoadBalancers
