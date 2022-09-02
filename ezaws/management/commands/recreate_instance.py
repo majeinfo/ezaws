@@ -5,8 +5,10 @@ $ ./recreate_instance.py --instance-name MASTER --profile DFI-BKP --subnet-id xy
 This script must be launched in the target Account
 '''
 import logging
+import time
 
 MAX_RESULTS = 200
+RETRY_SECONDS = 5
 ALL = "all"
 
 logger = logging.getLogger('commands')
@@ -159,22 +161,47 @@ def recreate_instance(client, account_id, instance_name, snapshots, recreate_ami
             ]
         )
 
+    # TODO: il manque le nom de l'instance sur le disk système
     # TODO: il manque les rôles et la conf réseau (private+public+EIP)
     # TODO: pour créer une instance avec un rôle, il faut une permission IAM PassRole
-    logger.info(f"Instance {instances['Instances'][0]['InstanceId']} created")
+    instance_id = instances['Instances'][0]['InstanceId']
+    logger.info(f"Instance {instance_id} created")
 
-    _recreate_volumes(client, instance_name, snapshots, region + availability_zone[-1])
+    _recreate_volumes(client, instance_name, instance_id, snapshots, region + availability_zone[-1])
 
 
-def _recreate_volumes(client, instance_name, snapshots, az):
+def _recreate_volumes(ec2_client, instance_name, instance_id, snapshots, az):
     logger.info(f"Recreate volumes for instance {instance_name}")
+
+    first_volume = True
+    should_be_restarted = False
 
     for tag_name, snapshot in snapshots.items():
         if tag_name.upper() == instance_name:
             continue
 
+        if first_volume:
+            # If the created Instance has additional Volumes, it probably won't boot properly
+            # so we must stop it first
+            first_volume = False
+            should_be_restarted = True
+
+            state_name = 'initializing'
+            while state_name != 'stopped':
+                logger.info(f"Stopping Instance {instance_name} (state is {state_name})")
+                time.sleep(RETRY_SECONDS)
+                response = ec2_client.stop_instances(
+                    InstanceIds=[instance_id],
+                    Force=True
+                )
+                state_name = response['StoppingInstances'][0]['CurrentState']['Name']
+                if state_name != 'stopped':
+                    time.sleep(RETRY_SECONDS)
+
+            logger.info(f"Instance {instance_name} stopped")
+
         logger.info(f"Create a volume from snapshot {snapshot['SnapshotId']} ({tag_name})")
-        client.create_volume(
+        volume = client.create_volume(
             AvailabilityZone=az,
             SnapshotId=snapshot['SnapshotId'],
             TagSpecifications=[{
@@ -184,6 +211,29 @@ def _recreate_volumes(client, instance_name, snapshots, az):
                 ]
             }]
         )
+
+        device_name = _get_tag_value(snapshot, 'Device')
+        logger.info(f"Attach Volume {volume['VolumeId']} as {device_name}")
+        time.sleep(RETRY_SECONDS)
+        client.attach_volume(
+            Device=device_name,
+            InstanceId=instance_id,
+            VolumeId=volume['VolumeId']
+        )
+
+    # Volumes have been recreated and attached, start the instance if it has been stopped
+    if should_be_restarted:
+        state_name = 'stopped'
+        while state_name != 'running':
+            logger.info(f"Starting Instance {instance_name} (state is {state_name})")
+            response = ec2_client.start_instances(
+                InstanceIds=[instance_id]
+            )
+            state_name = response['StartingInstances'][0]['CurrentState']['Name']
+            if state_name != 'running':
+                time.sleep(RETRY_SECONDS)
+
+        logger.info(f"Instance {instance_name} running")
 
 
 def _get_tag_value(snapshot, tag_name):
