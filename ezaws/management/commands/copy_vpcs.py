@@ -10,6 +10,7 @@ import logging
 
 MAX_RESULTS = 200
 VPC_SRC_TAG = 'SourceVpcId'
+SUBNET_SRC_TAG = 'SourceSubnetId'
 DHCP_OPTIONS_SRC_TAG = 'SourceDhcpOptionsId'
 
 logger = logging.getLogger('commands')
@@ -75,14 +76,9 @@ def _create_vpc(src_client, dst_client, src_vpc, dst_vpcs):
                     return
 
     # Must copy the src VPC
-    # Get the originame Name
+    # Get the original Name
     logger.debug(src_vpc)
-    src_name = ''
-    if 'Tags' in src_vpc:
-        for tag in src_vpc['Tags']:
-            if tag['Key'] == 'Name':
-                src_name = tag['Value']
-                break
+    src_name = _get_name_from_tags(src_vpc['Tags']) if 'Tags' in src_vpc else ''
 
     vpc = dst_client.create_vpc(
         CidrBlock=src_vpc['CidrBlock'],
@@ -97,6 +93,7 @@ def _create_vpc(src_client, dst_client, src_vpc, dst_vpcs):
             },
         ]
     )
+    dst_vpc_id = vpc['Vpc']['VpcId']
 
     # # must copy ACL, route table, DHCP options, subnets
     # src_route = src_client.describe_route_tables(
@@ -104,14 +101,41 @@ def _create_vpc(src_client, dst_client, src_vpc, dst_vpcs):
     #     MaxResults=100
     # )
     # logger.debug(src_route)
-    #
+
+    # Recreate the Subnets
     src_subnets = src_client.describe_subnets(
         Filters=[{'Name': 'vpc-id', 'Values': [src_vpc['VpcId']]}],
         MaxResults=MAX_RESULTS
     )
     logger.debug(src_subnets)
 
-    # TODO: recreate the subnets
+    for src_subnet in src_subnets['Subnets']:
+        # Try to use the original name
+        src_name = _get_name_from_tags(src_subnet['Tags']) if 'Tags' in src_subnet else ''
+
+        dst_subnet = dst_client.create_subnet(
+            VpcId=dst_vpc_id,
+            CidrBlock=src_subnet['CidrBlock'],
+            AvailabilityZone=dst_client.meta.region_name + src_subnet['AvailabilityZone'][-1],
+            TagSpecifications=[
+                {
+                    'ResourceType': 'subnet',
+                    'Tags': [
+                        {'Key': 'Name', 'Value': src_name},
+                        {'Key': SUBNET_SRC_TAG, 'Value': src_subnet['SubnetId']}
+                    ]
+                },
+            ]
+        )
+        logger.info(f"Subnet {src_subnet['SubnetId']} recreated")
+
+
+def _get_name_from_tags(tags):
+    for tag in tags:
+        if tag['Key'] == 'Name':
+            return tag['Value']
+
+    return ""
 
 
 def _create_dhcp_options(src_client, dst_client):

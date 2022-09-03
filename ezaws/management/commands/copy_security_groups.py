@@ -66,7 +66,7 @@ if __name__ == '__main__':
     src_session = boto3.Session(profile_name=opts.src_profile, region_name=opts.src_region) #if opts.src_profile_name else boto3.Session()
     src_client =  src_session.client('ec2')
 
-    dst_session = boto3.Session(profile_name=opts.dst_profile, region_name=opts.dst_region) if opts.dst_profile else boto3.Session(region_name=sopts.dst_region)
+    dst_session = boto3.Session(profile_name=opts.dst_profile, region_name=opts.dst_region) if opts.dst_profile else boto3.Session(region_name=opts.dst_region)
     dst_client =  dst_session.client('ec2')
 
     sec_groups = copy_security_groups(src_client, dst_client)
