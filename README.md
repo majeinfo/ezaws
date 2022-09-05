@@ -36,6 +36,7 @@ For example:
 (for DR)
 - tag_volumes.py : adds semantic tags to EBS volumes to make a DR easier
 - copy_snapshots.py : copies snapshots from an Account to another one to prepare a DR
+- copy_security_groups.py : copies Security Groups (and Inbound Rules) from an Account to another one
 - recreate_instances.py : recreates an instance from snapshots (for a DR)
 
 
