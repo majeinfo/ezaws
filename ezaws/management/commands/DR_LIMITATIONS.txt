@@ -10,3 +10,9 @@ You must make sure that :
 
 2- if default limits of AWS resources usage have been increased in the original Region
    make sure the same limits have been raised in the target Region
+
+3- IPv6 is not handled
+
+4- Outbound Rules in Security Groups are not handled
+
+5- EC2-Classic is not supported
