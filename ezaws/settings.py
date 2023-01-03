@@ -217,6 +217,8 @@ LOGGING = {
     }
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 if ENVIRONMENT == 'production':
     from .production import *
 else:

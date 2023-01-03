@@ -2,7 +2,7 @@ import os
 import glob
 import re
 from datetime import datetime
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages

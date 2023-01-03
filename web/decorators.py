@@ -1,6 +1,6 @@
 import logging
 from django.core.exceptions import PermissionDenied
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.shortcuts import redirect, reverse
 from django.http import HttpResponseRedirect
 from django.contrib import messages

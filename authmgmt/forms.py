@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from captcha.fields import CaptchaField
 import pytz
 from django import forms

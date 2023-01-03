@@ -2,7 +2,7 @@ import collections
 import logging
 from django.utils import timezone
 from datetime import datetime, timedelta
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.contrib import messages
