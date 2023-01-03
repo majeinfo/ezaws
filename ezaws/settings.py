@@ -221,6 +221,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 if ENVIRONMENT == 'production':
     from .production import *
+    CSRF_TRUSTED_ORIGINS = [
+        'https://ezaws.delamarche.com',
+    ]
 else:
     from .development import *
 
