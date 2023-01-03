@@ -153,7 +153,7 @@
     <tbody class="table-striped">
     {% for inst in ec2list %}
         <tr id="instance{{ forloop.counter }}" state="{{ inst.instance_state.Name }}">
-            <td><h5><span class="badge badge-dark">{{ inst.name }}</span></h5></td>
+            <td><h5><span class="badge badge-dark">{{ inst.name|truncatechars:24 }}</span></h5></td>
             <td>
                 {% if inst.instance_state.Name == 'running' %}<span class="badge badge-pill badge-success">&nbsp;</span>{% endif %}
                 {% if inst.instance_state.Name == 'stopped' %}<span class="badge badge-pill badge-danger">&nbsp;</span>{% endif %}
