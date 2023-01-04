@@ -90,7 +90,13 @@
                 <span class="badge badge-success">{{ vol.type }}</span>
             {% endif %}
             </td>
-            <td><span class="badge badge-primary">{{ vol.instance_name }}</span>
+            <td>
+                {% if vol.instance_name|length >= 24 %}
+                <span data-toggle="tooltip" data-placement="top" title="{{ vol.instance_name }}" class="badge badge-primary">{{ vol.instance_name|truncatechars:24 }}</span>
+                {% else %}
+                <span class="badge badge-primary">{{ vol.instance_name }}</span>
+                {% endif %}
+            </td>
             <td><span class="badge badge-success">{{ vol.device }}</span></td>
             <td>
                 <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
