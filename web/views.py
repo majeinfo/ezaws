@@ -46,11 +46,19 @@ def get_instances(request, cust_name):
     costs = pricing.Pricing(customer.region)
 
     ec2list = []
-    context = {'current': cust_name, 'names': names, 'ec2list': ec2list, 'running_count': 0, 'price': 0}
+    context = {
+        'current': cust_name,
+        'names': names,
+        'ec2list': ec2list,
+        'unused_eips': None,
+        'running_count': 0,
+        'price': 0
+    }
 
     ec2 = session.resource('ec2')
     try:
         ips = client.describe_addresses()
+        unused_eips = _get_eips(ips)
         std_logger.debug("EC2 IPs=", ips)
     except Exception as e:
         messages.error(request, e)
@@ -84,12 +92,17 @@ def get_instances(request, cust_name):
                             'name': name,
                             'volume_size': 0})
 
+            if _is_elastic_ip(ips, inst.public_ip_address):
+                del unused_eips[inst.public_ip_address]
+
             if inst.instance_type in pricing.ec2_pricing and utils.instance_is_running(inst):
                 context['price'] += int(costs.get_EC2_cost_per_hour(inst.instance_type))
     except Exception as e:
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)
         return render(request, 'instances.html', context)
+
+    context['unused_eips'] = unused_eips
 
     try:
         vol_size = collections.defaultdict(int)
@@ -606,6 +619,16 @@ def get_cloudfront(request, cust_name):
         return render(request, 'distributions.html', context)
 
     return render(request, 'distributions.html', context)
+
+
+def _get_eips(ips):
+    eips = {}
+    if not 'Addresses' in ips: return eips
+    for ip in ips['Addresses']:
+        if 'PublicIp' in ip:
+            eips[ip['PublicIp']] = True
+
+    return eips
 
 
 def _is_elastic_ip(ips, public_ip):
