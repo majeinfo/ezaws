@@ -50,6 +50,7 @@ def get_instances(request, cust_name):
         'current': cust_name,
         'names': names,
         'ec2list': ec2list,
+        'total_eips': 0,
         'unused_eips': None,
         'running_count': 0,
         'price': 0
@@ -59,6 +60,7 @@ def get_instances(request, cust_name):
     try:
         ips = client.describe_addresses()
         unused_eips = _get_eips(ips)
+        total_eips = len(unused_eips)
         std_logger.debug("EC2 IPs=", ips)
     except Exception as e:
         messages.error(request, e)
@@ -103,6 +105,7 @@ def get_instances(request, cust_name):
         return render(request, 'instances.html', context)
 
     context['unused_eips'] = unused_eips
+    context['total_eips'] = total_eips
 
     try:
         vol_size = collections.defaultdict(int)
