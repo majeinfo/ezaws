@@ -1,4 +1,4 @@
-# ezaws 
+# ezaws
 # 
 
 This Python application has 2 purposes:
