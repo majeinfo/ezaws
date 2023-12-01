@@ -121,6 +121,9 @@ ebs_pricing = { # per zone
     'gp2' : {
         'per_gib': 0.11,
     },
+    'gp3' : {
+        'per_gib': 0.08,
+    },
     'io1': {
         'per_gib': 0.138,
         'per_prov': 0.072,
