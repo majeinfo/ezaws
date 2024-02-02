@@ -138,7 +138,7 @@
 <h2>
     <button class="btn btn-primary btn-lg" type="button">Instances List (<span class="badge badge-light"><b>{{ running_count }}/{{ ec2list|length }}</b></span> running)</button>
     <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="badge badge-light"><b>${{ price }}</b></span></button>
-    <button class="btn btn-primary btn-light" type="button">Filtre:
+    <button class="btn btn-primary btn-light" type="button">Filter:
         <select id="state_filter" onChange="apply_filter(this.value)">
             <option value="all" selected="selected">all</option>
             <option value="running">running</option>
