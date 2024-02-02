@@ -237,16 +237,18 @@ def get_volumes(request, cust_name):
             context['total_vols'] += 1
             context['total_size'] += vol.size
             context['total_price'] += costs.get_EBS_cost_per_month(vol.size, vol.volume_type, vol.iops)
-            v = {'volume_id': vol.id, 'instance_id': 'N/A', 'instance_name': 'N/A', 'type': vol.volume_type,
-                 'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A'}
-            if not len(vol.attachments):
-                context['total_orphans'] += 1
-                continue
+            name = utils.get_volume_name(vol, customer.aws_resource_tag_name) or ''
+            v = {'volume_id': vol.id, 'name': name, 'instance_id': 'N/A', 'instance_name': 'N/A', 'type': vol.volume_type,
+                 'device': 'N/A', 'size': 0, 'read_ops': 'N/A', 'write_ops': 'N/A', 'state': "available"}
             if len(vol.attachments) and ('InstanceId' in vol.attachments[0]):
                 v['instance_id'] = vol.attachments[0]['InstanceId']
                 v['instance_name'] = inst_name_cache[v['instance_id']]
                 v['device'] = vol.attachments[0]['Device']
+                v['state'] = "attached"
             else:
+                v['instance_id'] = ""
+                v['instance_name'] = ""
+                v['device'] = ""
                 context['total_orphans'] += 1
 
             v['size'] = vol.size

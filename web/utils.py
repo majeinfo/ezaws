@@ -73,6 +73,17 @@ def get_instance_name(inst, tag_name='Name'):
     return None
 
 
+def get_volume_name(vol, tag_name='Name'):
+    # Extract the 'name' from tags
+    tag_name = tag_name.lower()
+    if vol.tags:
+         for tag in vol.tags:
+              if tag['Key'].lower() == tag_name:
+                   return tag['Value']
+
+    return None
+
+
 def instance_is_running(inst):
     return inst.state['Name'] == awsdef.EC2_RUNNING
 

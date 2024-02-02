@@ -4,6 +4,21 @@
 
 {% block content %}
 <script>
+    var state_filter = "all";
+    var volnumber = {{ vol_list|length }};
+
+    function apply_filter(value) {
+        for (let i = 1 ; i <= volnumber ; i++ ) {
+            var tr = $("#volume" + i);
+            var cur_state = tr.attr("state");
+            if (value != cur_state && value != "all") {
+                tr.hide();
+            } else {
+                tr.show();
+            }
+        }
+    }
+
     function get_vol_ops(volume_id) {
         $.ajax({
         url : "/web/ajax/get_vol_ops_metrics/{{ current }}/" + volume_id, // the endpoint
@@ -75,13 +90,21 @@
     <button class="btn btn-primary btn-lg" type="button">Volume List <span class="badge badge-light"><b>Total: {{ total_vols }} - Orphans: {{ total_orphans }}</b></span></button>
     <button class="btn btn-warning btn-lg" type="button">Price per Month: <span class="badge badge-light"><b>${{ total_price }}</b></span></button>
     <button class="btn btn-warning btn-lg" type="button">Total Size: <span class="badge badge-light"><b>{{ total_size }}</b> GiB</span></button>
+    <button class="btn btn-primary btn-light" type="button">Filter:
+        <select id="state_filter" onChange="apply_filter(this.value)">
+            <option value="all" selected="selected">all</option>
+            <option value="attached">attached</option>
+            <option value="available">available</option>
+        </select>
+    </button>
 </h2>
 <table class="table table-hover">
-    <thead><tr><td>Volume ID</td><td>Size</td><td>Type</td><td>Attachment</td><td>Device</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
+    <thead><tr><td>Volume ID</td><td>Name</td><td>Size</td><td>Type</td><td>Attachment</td><td>Device</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
     <tbody class="table-striped">
     {% for vol in vol_list %}
-        <tr>
+        <tr id="volume{{ forloop.counter }}" state="{{ vol.state }}">
             <td><span class="badge badge-dark">{{ vol.volume_id }}</span></td>
+            <td><span class="badge badge-dark">{{ vol.name }}</span></td>
             <td><span class="badge badge-info">{{ vol.size }} GiB</span></td>
             <td>
             {% if vol.type == 'standard' %}
@@ -94,18 +117,26 @@
                 {% if vol.instance_name|length >= 24 %}
                 <span data-toggle="tooltip" data-placement="top" title="{{ vol.instance_name }}" class="badge badge-primary">{{ vol.instance_name|truncatechars:24 }}</span>
                 {% else %}
-                <span class="badge badge-primary">{{ vol.instance_name }}</span>
+                    {% if vol.instance_name|length == 0 %}
+                        <span class="badge badge-light">Available</span>
+                    {% else %}
+                        <span class="badge badge-primary">{{ vol.instance_name }}</span>
+                    {% endif %}
                 {% endif %}
             </td>
             <td><span class="badge badge-success">{{ vol.device }}</span></td>
             <td>
-                <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
-                <span id="vol-read-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+                {% if vol.instance_name|length != 0 %}
+                    <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                    <span id="vol-read-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+                {% endif %}
             </td>
             <td>
-                <span id="vol-write-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
-                <span id="vol-write-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
-                <script>get_vol_ops("{{ vol.volume_id }}")</script>
+                {% if vol.instance_name|length != 0 %}
+                    <span id="vol-write-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>
+                    <span id="vol-write-tip-{{ vol.volume_id }}" style="display:none;" data-toggle="tooltip" data-placement="top" title="Cannot get Metrics on a non-attached Volume<br>or attached to a stopped Instance"><i class="fas fa-lg fa-info-circle"></i></span>
+                    <script>get_vol_ops("{{ vol.volume_id }}")</script>
+                {% endif %}
             </td>
         </tr>
     {% endfor %}
