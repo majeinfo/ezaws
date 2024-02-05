@@ -125,23 +125,23 @@ cache_pricing = {
 
 ebs_pricing = { # per zone
     'gp2' : {
-        'per_gib': 0.11,
+        'per_gib': 0.116,
     },
     'gp3' : {
-        'per_gib': 0.08,
+        'per_gib': 0.0928,
     },
     'io1': {
-        'per_gib': 0.138,
-        'per_prov': 0.072,
+        'per_gib': 0.145,
+        'per_prov': 0.076,
     },
     'st1': {
-        'per_gib': 0.05,
+        'per_gib': 0.053,
     },
     'sc1': {
-        'per_gib': 0.028,
+        'per_gib': 0.0174,
     },
     'snapshot': {
-        'per_gib': 0.05,
+        'per_gib': 0.053,
     },
     'standard': {
         'per_gib': 0.055,
