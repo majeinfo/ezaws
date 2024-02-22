@@ -275,6 +275,11 @@ def get_snapshots(request, cust_name):
     ec2 = session.resource('ec2')
     volumes = ec2.volumes.all()
 
+    # Create a cache to get the Volume name faster
+    volumes_cache = {}
+    for vol in volumes:
+        volumes_cache[vol.id] = utils.get_volume_name(vol, customer.aws_resource_tag_name) or ''
+
     snaplist = []
     vol_ids = []
     context = { 'current': cust_name, 'names': names, 'snaplist': snaplist,
@@ -302,7 +307,7 @@ def get_snapshots(request, cust_name):
             break
 
     for snap in snapshot_list:
-        snap['VolumeName'] = utils.get_volume_name_from_id(volumes, snap['VolumeId'])
+        snap['VolumeName'] = volumes_cache[snap['VolumeId']]
         snaplist.append(snap)
         context['total_max_size'] += snap['VolumeSize']
         context['total_max_price'] += costs.get_EBS_cost_per_month(snap['VolumeSize'], 'snapshot')
