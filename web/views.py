@@ -567,8 +567,15 @@ def get_s3(request, cust_name):
             return 0, bucketlist
 
         for bucket in buckets['Buckets']:
-            location = client.get_bucket_location(Bucket=bucket['Name'])
-            location = location['LocationConstraint']
+            location = None
+            try:
+                location = client.get_bucket_location(Bucket=bucket['Name'])
+                location = location['LocationConstraint']
+            except Exception as e:
+                messages.error(request, e)
+                utils.check_perm_message(request, cust_name)
+                return 0, bucketlist
+
             if location is None or location == "None":
                 location = "us-east-1"
             if location == "EU":
