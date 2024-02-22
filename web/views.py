@@ -297,6 +297,8 @@ def get_snapshots(request, cust_name):
             break
 
     for snap in snapshot_list:
+        name = utils.get_snapshot_name(snap, customer.aws_resource_tag_name) or ''
+        snap['VolumeName'] = name
         snaplist.append(snap)
         context['total_max_size'] += snap['VolumeSize']
         context['total_max_price'] += costs.get_EBS_cost_per_month(snap['VolumeSize'], 'snapshot')

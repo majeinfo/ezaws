@@ -12,7 +12,7 @@
     </button>
 </h2>
 <table class="table table-hover">
-    <thead><td>Snapshot Id</td><!--<td>State</td>--><td>Start Time</td><td>Volume ID</td><td>Volume Size</td></thead>
+    <thead><td>Snapshot Id</td><!--<td>State</td>--><td>Start Time</td><td>Volume ID</td><td>Volume Name</td><td>Volume Size</td></thead>
     <tbody class="table-striped">
     {% for snap in snaplist %}
         <tr>
@@ -20,6 +20,7 @@
             <!-- <td>{{ snap.State }}</td> -->
             <td><span class="badge badge-success">{{ snap.StartTime|date:"Y/m/d H:m" }}</span></td>
             <td><span class="badge badge-primary">{{ snap.VolumeId }}</span></td>
+            <td><span class="badge badge-primary">{{ snap.VolumeName }}</span></td>
             <td><span class="badge badge-info">{{ snap.VolumeSize }} GiB</span></td>
         </tr>
     {% endfor %}

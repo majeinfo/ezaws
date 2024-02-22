@@ -84,6 +84,16 @@ def get_volume_name(vol, tag_name='Name'):
     return None
 
 
+def get_snapshot_name(snap, tag_name='Name'):
+    # Extract the 'name' from tags
+    tag_name = tag_name.lower()
+    if 'Tags' in snap:
+         for tag in snap['Tags']:
+              if tag['Key'].lower() == tag_name:
+                   return tag['Value']
+
+    return None
+
 def instance_is_running(inst):
     return inst.state['Name'] == awsdef.EC2_RUNNING
 
