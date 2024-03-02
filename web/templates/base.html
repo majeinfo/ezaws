@@ -115,17 +115,6 @@
 </div>
 <!-- /#wrapper -->
 
-<!-- Clipboard message management -->
-<div class="modal clipboard-copied" tabindex="-1" role="dialog" aria-labelledby="clipboardCopiedLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <!-- <div class="modal-header"></div> -->
-      <div class="modal-body"><h5 class="modal-title text-center">Copied !</h5></div>
-      <!-- <div class="modal-footer"></div> -->
-    </div>
-  </div>
-</div>
-
 <script type="text/javascript">
 // AJAX for posting
 function create_post() {
@@ -247,6 +236,16 @@ $(document).ready(function() {
 </script>
     {% block more_js %}{% endblock %}
 <footer class="footer">
+<!-- Clipboard message management -->
+<div class="modal clipboard-copied" tabindex="-1" role="dialog" aria-labelledby="clipboardCopiedLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <!-- <div class="modal-header"></div> -->
+      <div class="modal-body"><h5 class="modal-title text-center">Copied !</h5></div>
+      <!-- <div class="modal-footer"></div> -->
+    </div>
+  </div>
+</div>
 </footer>
 </body>
 </html>
