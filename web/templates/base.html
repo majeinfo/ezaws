@@ -115,6 +115,17 @@
 </div>
 <!-- /#wrapper -->
 
+<!-- Clipboard message management -->
+<div class="modal clipboard-copied" tabindex="-1" role="dialog" aria-labelledby="clipboardCopiedLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <!-- <div class="modal-header"></div> -->
+      <div class="modal-body"><h5 class="modal-title text-center">Copied !</h5></div>
+      <!-- <div class="modal-footer"></div> -->
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
 // AJAX for posting
 function create_post() {
@@ -219,6 +230,10 @@ function start_audit() {
 function view_audit_reports() {
     var cust_name = get_cust_name();
     window.location = '/web/view_audit_reports/' + cust_name;
+}
+
+function copy_text(text) {
+  navigator.clipboard.writeText(text);
 }
 
 $(document).ready(function() {
