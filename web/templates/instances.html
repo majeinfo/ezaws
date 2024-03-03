@@ -178,26 +178,20 @@
                 {% if inst.is_elastic %}<b>{% endif %}
                 {% if inst.public_ip == None %}-{% else %}
                 {{ inst.public_ip }}
-                <span class="badge badge-light">
-                    <button data-toggle="modal" data-target=".clipboard-copied" onclick="copy_text('{{ inst.public_ip }}')">C</button>
-                </span>
+                <button class="btn-clipboard btn btn-light far fa-copy" data="{{ inst.public_ip }}"></button>
                 {% endif %}
                 {% if inst.is_elastic %}</b>{% endif %}
                 {% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}
             </td>
             <td>
                 {{ inst.private_ip }}
-                <span class="badge badge-light">
-                    <button data-toggle="modal" data-target=".clipboard-copied" onclick="copy_text('{{ inst.private_ip }}')">C</button>
-                </span>
+                <button class="btn-clipboard btn btn-light far fa-copy" data="{{ inst.private_ip }}"></button>
             </td>
             <td>{{ inst.zone }}</td>
             <td><span class="badge badge-success">{{ inst.instance_type }}</span> <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
             <td>
                 <span data-toggle="tooltip" data-placement="top" title="{{ inst.image_id }}<br>({{ inst.image_name }})" class="badge badge-primary">{{ inst.instance_id }}</span>
-                <span class="badge badge-light">
-                    <button data-toggle="modal" data-target=".clipboard-copied" onclick="copy_text('{{ inst.instance_id }}')">C</button>
-                </span>
+                <button class="btn-clipboard btn btn-light far fa-copy" data="{{ inst.instance_id }}"></button>
             </td>
             <td>
                 <span id="cpu-{{ inst.instance_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>

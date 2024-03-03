@@ -221,10 +221,6 @@ function view_audit_reports() {
     window.location = '/web/view_audit_reports/' + cust_name;
 }
 
-function copy_text(text) {
-  navigator.clipboard.writeText(text);
-}
-
 $(document).ready(function() {
     $('.table').DataTable({
         'pageLength': 100
@@ -232,20 +228,33 @@ $(document).ready(function() {
     $(function () {
         $('[data-toggle="tooltip"]').tooltip({html: true})
     });
+
+    $(document).find('.btn-clipboard').each(function(){
+        var $this = $(this);
+        var data = $this.attr("data");
+
+        $this.click(function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            $this.tooltip('dispose');
+            $this.tooltip({
+                title: "Copied!",
+                fallbackPlacement:"clockwise",
+                placement: 'right',
+                trigger: 'hover'
+            });
+            $this.tooltip('show');
+            navigator.clipboard.writeText(data);
+        }).mouseleave(function(){
+            $this.tooltip('dispose');
+            $this.tooltip('hide');
+            $this.tooltip({title:"", placement: 'right', trigger: 'hover'});
+        });
+    });
+
 } );
 </script>
     {% block more_js %}{% endblock %}
-<footer class="footer">
-<!-- Clipboard message management -->
-<div class="modal clipboard-copied" tabindex="-1" role="dialog" aria-labelledby="clipboardCopiedLabel" aria-hidden="true">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <!-- <div class="modal-header"></div> -->
-      <div class="modal-body"><h5 class="modal-title text-center">Copied !</h5></div>
-      <!-- <div class="modal-footer"></div> -->
-    </div>
-  </div>
-</div>
-</footer>
+<footer class="footer"></footer>
 </body>
 </html>
