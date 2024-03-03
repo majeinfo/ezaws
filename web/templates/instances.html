@@ -185,8 +185,10 @@
                 {% if inst.is_elastic %}&nbsp;<span class="badge badge-info">EIP</span>{% endif %}
             </td>
             <td>
+                {% if inst.private_ip == None %}-{% else %}
                 {{ inst.private_ip }}
                 <button class="btn-clipboard btn btn-light far fa-copy" data="{{ inst.private_ip }}"></button>
+                {% endif %}
             </td>
             <td>{{ inst.zone }}</td>
             <td><span class="badge badge-success">{{ inst.instance_type }}</span> <span class="badge badge-secondary"><script>document.writeln(get_inst_price("{{ inst.instance_type }}"))</script></span></td>
