@@ -11,6 +11,7 @@
         Total Price per Month: <span class="badge badge-light"><b>$ {{ total_min_price }}-{{ total_max_price }}</b></span>
     </button>
 </h2>
+      <div class="table-responsive">
 <table class="table table-hover">
     <thead><td>Snapshot Id</td><!--<td>State</td>--><td>Start Time</td><td>Volume ID</td><td>Volume Name</td><td>Volume Size</td></thead>
     <tbody class="table-striped">
@@ -26,4 +27,5 @@
     {% endfor %}
     </tbody>
 </table>
+      </div>
 {% endblock %}

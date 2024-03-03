@@ -8,6 +8,7 @@
     <h2>
         <button class="btn btn-primary btn-lg" type="button">Reserved Instances List <span class="badge badge-light"><b>{{ rsvlist|length }}</b></span></button>
     </h2>
+            <div class="table-responsive">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -49,6 +50,7 @@
         {% endfor %}
         </tbody>
     </table>
+            </div>
   </div>
 </div>
 {% endblock %}

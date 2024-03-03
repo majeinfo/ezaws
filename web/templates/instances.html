@@ -151,6 +151,7 @@
     </button>
     <button class="btn btn-primary btn-lg" type="button">Unused EIP: <span class="badge badge-light"><b>{{ unused_eips|length }} / {{ total_eips }}</b></span></button>
 </h2>
+      <div class="table-responsive">
 <table class="table table-hover">
     <thead><tr><td>Name</td><td>Status</td><td>Public IP</td><td>Private IP</td><td>Placement</td><td>Model Type</td><td>Instance ID</td><td>CPU Load</td><td>EBS Size</td></tr></thead>
     <tbody class="table-striped">
@@ -205,6 +206,7 @@
     {% endfor %}
     </tbody>
 </table>
+      </div>
   </div>
 </div>
 <br>
