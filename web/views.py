@@ -58,10 +58,10 @@ def get_instances(request, cust_name):
 
     ec2 = session.resource('ec2')
     try:
-        ips = client.describe_addresses()
-        unused_eips = _get_eips(ips)
+        eips = client.describe_addresses()
+        unused_eips = _get_eips(eips)
         total_eips = len(unused_eips)
-        std_logger.debug("EC2 IPs=", ips)
+        std_logger.debug("EC2 IPs=", eips)
     except Exception as e:
         messages.error(request, e)
         utils.check_perm_message(request, cust_name)
@@ -87,15 +87,15 @@ def get_instances(request, cust_name):
                             'image_id': inst.image_id,
                             'image_name': _get_ami_name(amis, inst.image_id, customer.aws_resource_tag_name),
                             'public_ip': inst.public_ip_address,
-                            'is_elastic': _is_elastic_ip(ips, inst.public_ip_address),
+                            'is_elastic': _is_elastic_ip(eips, inst.public_ip_address),
                             'private_ip': inst.private_ip_address,
                             'zone': inst.placement['AvailabilityZone'],
                             'tags': inst.tags,
                             'name': name,
                             'volume_size': 0})
 
-            if _is_elastic_ip(ips, inst.public_ip_address):
-                del unused_eips[inst.public_ip_address]
+            # if _is_elastic_ip(eips, inst.public_ip_address):
+            #     del unused_eips[inst.public_ip_address]
 
             if inst.instance_type in pricing.ec2_pricing and utils.instance_is_running(inst):
                 context['price'] += int(costs.get_EC2_cost_per_hour(inst.instance_type))
@@ -104,7 +104,11 @@ def get_instances(request, cust_name):
         utils.check_perm_message(request, cust_name)
         return render(request, 'instances.html', context)
 
-    # TODO: unused_eips does not take in account EIP associated with an ENI card
+    # unused_eips must take in account EIP associated with an ENI card
+    unused_eips = 0
+    for eip in eips['Addresses']:
+        if 'NetworkInterfaceId' not in eip and 'InstanceId' not in eip:
+            unused_eips += 1
     context['unused_eips'] = unused_eips
     context['total_eips'] = total_eips
 
