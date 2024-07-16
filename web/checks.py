@@ -92,7 +92,7 @@ def check_orphan_eips(customer, eips):
     total_price = 0
 
     for eip in eips:
-        if ('InstanceId' not in eip) or (not eip['InstanceId']):
+        if (('InstanceId' not in eip) or (not eip['InstanceId'])) and (('NetworkInterfaceId' not in eip) or (not eip['NetworkInterfaceId'])):
             orphans.append(eip['PublicIp'])
             total_price += costs.get_EIP_cost_per_month()
 

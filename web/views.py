@@ -104,6 +104,7 @@ def get_instances(request, cust_name):
         utils.check_perm_message(request, cust_name)
         return render(request, 'instances.html', context)
 
+    # TODO: unused_eips does not take in account EIP associated with an ENI card
     context['unused_eips'] = unused_eips
     context['total_eips'] = total_eips
 
