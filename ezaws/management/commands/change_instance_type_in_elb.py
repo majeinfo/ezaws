@@ -58,7 +58,9 @@ if __name__ == '__main__':
         logger.info(f"Instance Type for {opts.instance_name} has been succesfully changed")
 
         if len(found_groups):
-            result = register_to_target_groups(elbv2_client, ec2_client, opts.instance_name, ','.join(found_groups))
+            answer = input(f"Do you want to register {opts.instance_name} in these Target Groups: {found_groups} ? (y/n) ")
+            if answer != "y": exit(0)
+            result = register_to_target_groups(elbv2_client, ec2_client, opts.instance_name, found_groups)
             if result:
                 logger.info(f"Instance {opts.instance_name} registered in all Target Groups")
 

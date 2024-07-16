@@ -65,7 +65,8 @@ def deregister_from_target_groups(elbv2_client, ec2_client, instance_name):
             'target_arn': target_group['TargetGroupArn']
         })
 
-    # We must now wait until all the deregistered actions are finsihed (in case of draining)
+    # We must now wait until all the deregistered actions are finished (in case of draining)
+    groups = []
     in_progress = True
     while in_progress:
         in_progress = False
@@ -78,11 +79,13 @@ def deregister_from_target_groups(elbv2_client, ec2_client, instance_name):
             if 'TargetHealthDescriptions' in health and len(health['TargetHealthDescriptions']) and health['TargetHealthDescriptions'][0]['TargetHealth']['State'] != 'unused':
                 logger.info(f"Still draining in Group {group['target_name']}")
                 in_progress = True
+                if group['target_name'] not in groups:
+                    groups.append(group['target_name'])
 
         if in_progress:
             time.sleep(RETRY_SECONDS)
 
-    return found_groups
+    return ",".join(groups)
 
 
 if __name__ == '__main__':
