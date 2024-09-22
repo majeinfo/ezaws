@@ -57,7 +57,7 @@ def _change_one_instance_type(ec2_client, instance_name, instance_id, state_name
             if state_name != 'running':
                 time.sleep(RETRY_SECONDS)
 
-    logger.info(f"Instance {instance_name} running")
+        logger.info(f"Instance {instance_name} running")
 
     return True
 
