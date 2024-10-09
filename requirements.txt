@@ -2,7 +2,7 @@ asgiref==3.6.0
 beautifulsoup4==4.11.1
 boto3==1.24.20
 botocore==1.27.20
-Django==4.1.13
+Django==4.2.16
 django-bootstrap4==22.3
 django-debug-toolbar==3.8.1
 django-decorator-include==1.3
