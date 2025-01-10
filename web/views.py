@@ -312,7 +312,14 @@ def get_snapshots(request, cust_name):
             break
 
     for snap in snapshot_list:
-        snap['VolumeName'] = volumes_cache[snap['VolumeId']]
+        # Warning: some snapshot may exist but their original volume has been destroyed !
+        if snap['VolumeId'] in volumes_cache:
+            snap['VolumeName'] = volumes_cache[snap['VolumeId']]
+            snap['vol_missing'] = False
+        else:
+            snap['VolumeName'] = snap['VolumeId']
+            snap['vol_missing'] = True
+
         snaplist.append(snap)
         context['total_max_size'] += snap['VolumeSize']
         context['total_max_price'] += costs.get_EBS_cost_per_month(snap['VolumeSize'], 'snapshot')
