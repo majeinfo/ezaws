@@ -100,7 +100,7 @@
 </h2>
             <div class="table-responsive">
 <table class="table table-hover">
-    <thead><tr><td>Volume ID</td><td>Name</td><td>Size</td><td>Type</td><td>Attachment</td><td>Device</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
+    <thead><tr><td>Volume ID</td><td>Name</td><td>Size</td><td>Type</td><td>Attachment</td><td>Device</td><td>Encrypted</td><td>Read Ops/30 days</td><td>Write Ops/30 days</td></tr></thead>
     <tbody class="table-striped">
     {% for vol in vol_list %}
         <tr id="volume{{ forloop.counter }}" state="{{ vol.state }}">
@@ -126,6 +126,11 @@
                 {% endif %}
             </td>
             <td><span class="badge badge-success">{{ vol.device }}</span></td>
+            <td>{% if vol.encrypted %}
+			<span class="badge badge-success">{{ vol.encrypted }}</span></td>
+                {% else %}
+			<span class="badge badge-danger">{{ vol.encrypted }}</span></td>
+                {% endif %}
             <td>
                 {% if vol.instance_name|length != 0 %}
                     <span id="vol-read-{{ vol.volume_id }}" class=""><i class="fas fa-spinner fa-pulse"></i></span>

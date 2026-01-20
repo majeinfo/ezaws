@@ -257,6 +257,7 @@ def get_volumes(request, cust_name):
                 context['total_orphans'] += 1
 
             v['size'] = vol.size
+            v['encrypted'] = vol.encrypted
             vol_list.append(v)
     except Exception as e:
         messages.error(request, e)
